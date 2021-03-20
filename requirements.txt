@@ -1,0 +1,3 @@
+numpy==1.19.3
+opencv-python==4.5.1.48
+toml==0.10.2
