@@ -10,16 +10,16 @@ class MultiCrop:
     """ This utility class detects and extracts single images from a big scanned image. """
 
     @classmethod
-    def main(cls, parent_path_images: str, input_path: str, output_path: str, error_path: str, min_pixels: int, detection_threshold: int):
+    def main(cls, parent_path_images: str, input_path: str, output_path: str, min_pixels: int, detection_threshold: int):
         """ TODO """
 
         file_list = SharedUtility.generate_file_list(path=Path(parent_path_images) / Path(input_path))
 
         for i in file_list:
-            cls._split_scanned_image(image_path=i, input_path=input_path, output_path=output_path, error_path=error_path, min_pixels=min_pixels, detection_threshold=detection_threshold)
+            cls._split_scanned_image(image_path=i, input_path=input_path, output_path=output_path, min_pixels=min_pixels, detection_threshold=detection_threshold)
 
     @staticmethod
-    def _split_scanned_image(image_path: str, input_path: str, output_path: str, error_path: str, min_pixels: int, detection_threshold: int):
+    def _split_scanned_image(image_path: str, input_path: str, output_path: str, min_pixels: int, detection_threshold: int):
         """ Original source from https://github.com/numpy/numpy/issues/17726 """
 
         image = cv2.imread(filename=image_path)
