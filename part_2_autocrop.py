@@ -147,9 +147,9 @@ def autocrop(params):
     found, img = cont(img, gray, thresh, crop)
 
     if found:
-        print(f"Saveing to: {out_path}/{name}")
+        print(f"Saving to: {out_path}/{name}")
         try:
-            cv2.imwrite(f"{out_path}/{name}", img, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
+            cv2.imwrite(f"{out_path}/{name}", img, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
         except:
             None
         # TODO: this is always writing JPEG, no matter what was the input file type, can we detect this?
@@ -217,7 +217,7 @@ def main():
     else:
         if num_threads == None:
             try:
-                num_threads = len(os.sched_getaffinity(0))
+                # num_threads = len(os.sched_getaffinity(0))
                 print(f"Using {num_threads} threads.")
             except:
                 print("Automatic thread detection didn't work. Defaulting to 1 thread only. \
@@ -229,7 +229,7 @@ def main():
             params.append({"thresh": thresh,
                             "crop": crop,
                             "filename": f,
-                            "out_path": out_path})
+                            "out_path": out_path}) # This results in a list of dictionaries, which each will be processed in the next step.
 
         with Pool(num_threads) as p:
             results = p.map(autocrop, params)
