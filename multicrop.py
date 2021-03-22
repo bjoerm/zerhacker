@@ -1,9 +1,10 @@
-# TODO Add parallel execution.
-# TODO Add status messages / progress bar.
+# TODO Add parallel execution. See the autocrop part.
+# TODO Add status messages or progress bar.
 
 import cv2
 from pathlib import Path
 from shared_utils import SharedUtility
+from multiprocessing import Pool
 
 
 class MultiCrop:
@@ -51,13 +52,13 @@ class MultiCrop:
 
             cropped = original[y: y + h, x: x + w]  # The cropped image.
 
-            cv2.imwrite(filename=str(image_path).replace(input_path, output_path).replace(".jpg", f"_cr_{image_number}.jpg"), img=cropped)
+            cv2.imwrite(str(image_path).replace(input_path, output_path).replace(".jpg", f"_cr_{image_number}.jpg"), cropped, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
 
             image_number += 1
 
         # When no contours are found or only too small contours are detected, copy the image to a special folder in the output folder.
         if len(cnts) == 0 or image_number == too_small_contour_count:
             (Path(str(image_path).replace(input_path, output_path)).parent / Path("no_crop_done")).mkdir(parents=True, exist_ok=True)
-            cv2.imwrite(filename=str(image_path).replace(input_path, output_path + "/no_crop_done/"), img=original)
+            cv2.imwrite(str(image_path).replace(input_path, output_path + "/no_crop_done/"), original, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
 
         return
