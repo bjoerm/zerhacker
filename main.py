@@ -1,1 +1,0 @@
-# TODO Check https://github.com/Claytorpedo/scan-cropper/blob/master/scan_cropper.py
