@@ -13,7 +13,7 @@ MIN_PIXELS = 300
 pathlib.Path("output/multi_crop").mkdir(parents=True, exist_ok=True) # Ensuring that the output folder exists.
 
 files_list = glob.glob(
-    "input/multi_crop/**/*.jpg"  # glob itself seems to not care about whether file extension contain capital letters. Anyways, [mM][pP]3 is a bit safer than just mp3. This does not perceive .mp3a as .mp3. TODO Check whether it has problems with folders that contains the .mp3 somewhere.
+    "input/multi_crop/**/*.jpg"  # glob itself seems to not care about whether file extension contain capital letters.
     , recursive=True # Recursive = True in combination with ** in the path will lead to a search in every folder and subfolder and subsubfolder and ...
     )
 

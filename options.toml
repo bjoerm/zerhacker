@@ -1,12 +1,12 @@
 # Folders:
 parent_path_images = "pictures"
 
-[folders]
 untouched_scans_path = "1_untouched"  # TODO This could be an argument.
 rough_cut_path = "2_rough_cut"
 error_rough_cut_path = "x_error_rough_cut"  # Files from this folder need to be manually cut.
 fine_cut_path = "3_output"
 
 
-# Multi Crop:
+# Multicrop
 min_pixels = 300
+detection_threshold = 190 # The higher, the higher the requirements to decide that something is an image. Can be set between 0 and 255. https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html
