@@ -2,7 +2,8 @@
 
 import cv2
 import numpy as np
-import os, glob
+import os
+import glob
 from multiprocessing import Pool
 from pathlib import Path
 
@@ -38,7 +39,7 @@ class FineCut:
             print(f"No image files found in {in_path}\n Exiting.")
 
         else:
-            if num_threads == None:
+            if num_threads is None:
                 try:
                     # num_threads = len(os.sched_getaffinity(0))  # TODO Find something that works on Windows here.
                     print(f"Using {num_threads} threads.")
@@ -49,10 +50,12 @@ class FineCut:
 
             params = []
             for f in files:
-                params.append({"thresh": thresh,
-                                "crop": crop,
-                                "filename": f,
-                                "out_path": out_path})  # This results in a list of dictionaries, which each will be processed in the next step.
+                params.append({
+                    "thresh": thresh
+                    , "crop": crop
+                    , "filename": f
+                    , "out_path": out_path
+                    })  # This results in a list of dictionaries, which each will be processed in the next step.
 
             with Pool(num_threads) as p:
                 results = p.map(cls.autocrop, params)  # TODO does this even need any output?
@@ -72,7 +75,7 @@ class FineCut:
         img = cv2.copyMakeBorder(img, 100, 100, 100, 100, cv2.BORDER_CONSTANT, value=[255, 255, 255])
         im_h, im_w = img.shape[:2]
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        res_gray = cv2.resize(img, (int(im_w / 6), int(im_h / 6)), interpolation=cv2.INTER_CUBIC)
+        res_gray = cv2.resize(img, (int(im_w / 6), int(im_h / 6)), interpolation=cv2.INTER_CUBIC)  # TODO What is this need for? Try to understand before dropping it?
         found, img = cls.cont(img, gray, thresh, crop)
 
         if found:
@@ -97,7 +100,6 @@ class FineCut:
                     else:
                         out_f.write(buf)
 
-
     def order_rect(points):
         # idea: https://www.pyimagesearch.com/2014/08/25/4-point-opencv-getperspective-transform-example/
         # initialize result -> rectangle coordinates (4 corners, 2 coordinates (x,y))
@@ -108,8 +110,8 @@ class FineCut:
         # bottom-right corner: largest sum
         # bottom-left corner: largest difference
 
-        s = np.sum(points, axis = 1)
-        d = np.diff(points, axis = 1)
+        s = np.sum(points, axis=1)
+        d = np.diff(points, axis=1)
 
         res[0] = points[np.argmin(s)]
         res[1] = points[np.argmin(d)]
@@ -138,7 +140,7 @@ class FineCut:
         dst = np.array([[0, 0],
                         [maxWidth - 1, 0],
                         [maxWidth - 1, maxHeight - 1],
-                        [0, maxHeight - 1]], dtype = np.float32)
+                        [0, maxHeight - 1]], dtype=np.float32)
 
         # compute the perspective transform matrix and then apply it
         M = cv2.getPerspectiveTransform(rect, dst)
@@ -151,23 +153,23 @@ class FineCut:
     def cont(cls, img, gray, user_thresh, crop):
         found = False
         loop = False
-        old_val = 0 # thresh value from 2 iterations ago
-        i = 0 # number of iterations
+        old_val = 0  # thresh value from 2 iterations ago
+        i = 0  # number of iterations
 
         im_h, im_w = img.shape[:2]
-        while found == False: # repeat to find the right threshold value for finding a rectangle
-            if user_thresh >= 255 or user_thresh == 0 or loop: # maximum threshold value, minimum threshold value or loop detected (alternating between 2 threshold values without finding borders.
-                break # stop if no borders could be detected
+        while found is False:  # repeat to find the right threshold value for finding a rectangle
+            if user_thresh >= 255 or user_thresh == 0 or loop:  # maximum threshold value, minimum threshold value or loop detected (alternating between 2 threshold values without finding borders.
+                break  # stop if no borders could be detected
 
-            ret, thresh = cv2.threshold(gray, user_thresh, 255, cv2.THRESH_BINARY)
+            ret, thresh = cv2.threshold(gray, user_thresh, 255, cv2.THRESH_BINARY)  # TODO Don't fetch ret? e.g. fetch only [1].
             contours = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)[0]
             im_area = im_w * im_h
 
             for cnt in contours:
                 area = cv2.contourArea(cnt)
-                if area > (im_area/100) and area < (im_area/1.01):
-                    epsilon = 0.1 * cv2.arcLength(cnt,True)
-                    approx = cv2.approxPolyDP(cnt,epsilon,True)
+                if area > (im_area / 100) and area < (im_area / 1.01):
+                    epsilon = 0.1 * cv2.arcLength(cnt, True)
+                    approx = cv2.approxPolyDP(cnt, epsilon, True)
 
                     if len(approx) == 4:
                         found = True
@@ -184,7 +186,7 @@ class FineCut:
                             loop = True
                         break
 
-                    rect = np.zeros((4, 2), dtype = np.float32)
+                    rect = np.zeros((4, 2), dtype=np.float32)
                     rect[0] = approx[0]
                     rect[1] = approx[1]
                     rect[2] = approx[2]
@@ -192,7 +194,7 @@ class FineCut:
 
                     dst = cls.four_point_transform(img, rect)
                     dst_h, dst_w = dst.shape[:2]
-                    img = dst[crop:dst_h-crop, crop:dst_w-crop]
+                    img = dst[crop: dst_h - crop, crop: dst_w - crop]
                 else:
                     if i > 100:
                         # if this happens a lot, increase the threshold, maybe it helps, otherwise just stop
@@ -205,7 +207,7 @@ class FineCut:
                         if user_thresh == old_val - 5:
                             loop = True
             i += 1
-            if i%2 == 0:
-                old_value = user_thresh
+            if i % 2 == 0:
+                old_value = user_thresh  # TODO What is this part for?
 
         return found, img
