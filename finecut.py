@@ -30,7 +30,7 @@ class FineCut:
         types = ("*.jpg", "*.JPG", "*.JPEG", "*.jpeg", "*.png", "*.PNG")  # TODO use this approach in the other class as well. But then also fix the the file output there, which is hard coded to .jpg.
 
         for t in types:
-            if glob.glob(f"{in_path}/{t}") != []: # TODO Should I add here ** for recursive search?
+            if glob.glob(f"{in_path}/{t}") != []:  # TODO Should I add here ** for recursive search?
                 f_l = glob.glob(f"{in_path}/{t}")
                 for f in f_l:
                     files.append(f)
@@ -72,11 +72,11 @@ class FineCut:
         img = cv2.imread(filename)
 
         # Add white background (in case one side is cropped right already, otherwise script would fail finding contours)
-        img = cv2.copyMakeBorder(img, 100, 100, 100, 100, cv2.BORDER_CONSTANT, value=[255, 255, 255])
+        img = cv2.copyMakeBorder(src=img, top=100, bottom=100, left=100, right=100, borderType=cv2.BORDER_CONSTANT, value=[255, 255, 255])
         im_h, im_w = img.shape[:2]
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        res_gray = cv2.resize(img, (int(im_w / 6), int(im_h / 6)), interpolation=cv2.INTER_CUBIC)  # TODO What is this need for? Try to understand before dropping it?
-        found, img = cls.cont(img, gray, thresh, crop)
+        gray = cv2.cvtColor(src=img, code=cv2.COLOR_BGR2GRAY)
+        res_gray = cv2.resize(src=img, dsize=(int(im_w / 6), int(im_h / 6)), interpolation=cv2.INTER_CUBIC)  # TODO What is this need for? Try to understand before dropping it?
+        found, img = cls.cont(img=img, gray=gray, user_thresh=thresh, crop=crop)
 
         if found:
             print(f"Saving to: {out_path}/{name}")
@@ -161,15 +161,15 @@ class FineCut:
             if user_thresh >= 255 or user_thresh == 0 or loop:  # maximum threshold value, minimum threshold value or loop detected (alternating between 2 threshold values without finding borders.
                 break  # stop if no borders could be detected
 
-            ret, thresh = cv2.threshold(gray, user_thresh, 255, cv2.THRESH_BINARY)  # TODO Don't fetch ret? e.g. fetch only [1].
-            contours = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)[0]
+            ret, thresh = cv2.threshold(src=gray, thresh=user_thresh, maxval=255, type=cv2.THRESH_BINARY)  # TODO Don't fetch ret? e.g. fetch only [1].
+            contours = cv2.findContours(image=thresh, mode=cv2.RETR_LIST, method=cv2.CHAIN_APPROX_NONE)[0]
             im_area = im_w * im_h
 
             for cnt in contours:
-                area = cv2.contourArea(cnt)
+                area = cv2.contourArea(contour=cnt)
                 if area > (im_area / 100) and area < (im_area / 1.01):
-                    epsilon = 0.1 * cv2.arcLength(cnt, True)
-                    approx = cv2.approxPolyDP(cnt, epsilon, True)
+                    epsilon = 0.1 * cv2.arcLength(curve=cnt, closed=True)
+                    approx = cv2.approxPolyDP(curve=cnt, epsilon=epsilon, closed=True)
 
                     if len(approx) == 4:
                         found = True
@@ -192,7 +192,7 @@ class FineCut:
                     rect[2] = approx[2]
                     rect[3] = approx[3]
 
-                    dst = cls.four_point_transform(img, rect)
+                    dst = cls.four_point_transform(img=img, points=rect)
                     dst_h, dst_w = dst.shape[:2]
                     img = dst[crop: dst_h - crop, crop: dst_w - crop]
                 else:
