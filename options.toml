@@ -8,4 +8,9 @@ fine_cut_path = "3_output"
 
 # Multicrop
 min_pixels = 300
-detection_threshold = 190 # The higher, the higher the requirements to decide that something is an image. Can be set between 0 and 255. https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html
+detection_threshold = 190  # Note that this parameter refers to THRESH_BINARY_INV. Can be set between 0 and 255. https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html
+
+
+# Finecut
+detection_threshold_finecut = 200  # Threshold value: Higher values represent less aggressive contour search. If it's chosen too high, a white border will be introduced.
+extra_crop = 5  # Extra crop: After crop/rotate often a small white border remains. This removes this. If it cuts off too much of your image, adjust this.

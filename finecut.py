@@ -5,6 +5,7 @@ import numpy as np
 import os
 import glob
 from multiprocessing import Pool
+import multiprocessing
 from pathlib import Path
 
 
@@ -12,13 +13,13 @@ class FineCut:
     """Crop/Rotate images automatically. Images should be single images on white background."""
 
     @classmethod
-    def main(cls, parent_path_images: str, in_path: str, out_path: str, thresh: int, crop: int, num_threads: int):
+    def main(cls, parent_path_images: str, in_path: str, out_path: str, thresh: int, extra_crop: int, num_threads: int):
         """
-        # Threshold value. Higher values represent less aggressive contour search. If it's chosen too high, a white border will be introduced.
+        Threshold value: Higher values represent less aggressive contour search. If it's chosen too high, a white border will be introduced.
 
-        # Standard extra crop. After crop/rotate often a small white border remains. This removes this. If it cuts off too much of your image, adjust this.
+        Extra crop: After crop/rotate often a small white border remains. This removes this. If it cuts off too much of your image, adjust this.
 
-        # Specify the number of threads to be used to process the images in parallel. If not provided, the script will try to find the value itself (which doesn't work on Windows or MacOS -> defaults to 1 thread only).
+        Number of threads to be used to process the images in parallel. If not provided, the script will try to find the value itself (which doesn't work on Windows or MacOS -> defaults to 1 thread only).
         """
 
         in_path = Path(parent_path_images) / Path(in_path)
@@ -39,20 +40,12 @@ class FineCut:
             print(f"No image files found in {in_path}\n Exiting.")
 
         else:
-            if num_threads is None:
-                try:
-                    # num_threads = len(os.sched_getaffinity(0))  # TODO Find something that works on Windows here.
-                    print(f"Using {num_threads} threads.")
-                except:
-                    print("Automatic thread detection didn't work. Defaulting to 1 thread only. \
-                            Please specify the correct number manually via the '-p' argument.")
-                    num_threads = 1
 
             params = []
             for f in files:
                 params.append({
                     "thresh": thresh
-                    , "crop": crop
+                    , "crop": extra_crop
                     , "filename": f
                     , "out_path": out_path
                     })  # This results in a list of dictionaries, which each will be processed in the next step.
@@ -161,7 +154,7 @@ class FineCut:
             if user_thresh >= 255 or user_thresh == 0 or loop:  # maximum threshold value, minimum threshold value or loop detected (alternating between 2 threshold values without finding borders.
                 break  # stop if no borders could be detected
 
-            ret, thresh = cv2.threshold(src=gray, thresh=user_thresh, maxval=255, type=cv2.THRESH_BINARY)  # TODO Don't fetch ret? e.g. fetch only [1].
+            thresh = cv2.threshold(src=gray, thresh=user_thresh, maxval=255, type=cv2.THRESH_BINARY)[1]
             contours = cv2.findContours(image=thresh, mode=cv2.RETR_LIST, method=cv2.CHAIN_APPROX_NONE)[0]
             im_area = im_w * im_h
 

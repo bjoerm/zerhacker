@@ -27,7 +27,7 @@ class MultiCrop:
         original = image.copy()
         gray = cv2.cvtColor(src=image, code=cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(src=gray, ksize=(3, 3), sigmaX=0)
-        thresh = cv2.threshold(src=blurred, thresh=detection_threshold, maxval=255, type=cv2.THRESH_BINARY_INV)[1]  # The higher the higher the threshold. https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html
+        thresh = cv2.threshold(src=blurred, thresh=detection_threshold, maxval=255, type=cv2.THRESH_BINARY_INV)[1]  # For values on thresholds, see: https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html
 
         # Find contours
         cnts = cv2.findContours(image=thresh, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)
