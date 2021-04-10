@@ -7,7 +7,7 @@ fine_cut_path = "3_output"
 
 
 # Multicrop
-min_pixels = 300
+min_pixels = 400  # Always adjust this to the pixels of your input file.
 detection_threshold = 190  # Note that this parameter refers to THRESH_BINARY_INV. Can be set between 0 and 255. https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html
 
 
