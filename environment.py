@@ -19,19 +19,3 @@ class Environment:
 
         for i in folders:
             (Path(parent_path_images) / Path(i)).mkdir(parents=True, exist_ok=True)  # TODO https://stackoverflow.com/questions/17431638/get-typeerror-dict-values-object-does-not-support-indexing-when-using-python
-
-    @staticmethod
-    def get_available_threads():
-
-        try:
-            num_threads = os.cpu_count()
-        except AttributeError:
-            try:
-                num_threads = multiprocessing.cpu_count()
-            except NotImplementedError:
-                print("Automatic thread detection didn't work. Defaulting to 1 thread only.")
-                num_threads = 1
-
-        print(f"Using {num_threads} threads.")
-
-        return num_threads
