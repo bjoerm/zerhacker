@@ -33,4 +33,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-    print("Script finished")
+    print("\n[Status] Script finished")

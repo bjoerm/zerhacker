@@ -1,5 +1,4 @@
 from pathlib import Path
-import os
 
 # TODO Maybe add a check for supported file types.
 
