@@ -7,13 +7,14 @@ import glob
 from multiprocessing import Pool
 import multiprocessing
 from pathlib import Path
+from shared_utils import SharedUtility
 
 
 class FineCut:
     """Crop/Rotate images automatically. Images should be single images on white background."""
 
     @classmethod
-    def main(cls, parent_path_images: str, in_path: str, out_path: str, thresh: int, extra_crop: int, num_threads: int):
+    def main(cls, parent_path_images: str, input_path: str, output_path: str, thresh: int, extra_crop: int, num_threads: int):
         """
         Threshold value: Higher values represent less aggressive contour search. If it's chosen too high, a white border will be introduced.
 
@@ -22,43 +23,38 @@ class FineCut:
         Number of threads to be used to process the images in parallel. If not provided, the script will try to find the value itself (which doesn't work on Windows or MacOS -> defaults to 1 thread only).
         """
 
-        in_path = Path(parent_path_images) / Path(in_path)
-        out_path = Path(parent_path_images) / Path(out_path)
+        input_path = Path(parent_path_images) / Path(input_path)
+        output_path = Path(parent_path_images) / Path(output_path)
 
-        # TODO Start of a find files method.
-        files = []
-
-        types = ("*.jpg", "*.JPG", "*.JPEG", "*.jpeg", "*.png", "*.PNG")  # TODO use this approach in the other class as well. But then also fix the the file output there, which is hard coded to .jpg.
-
-        for t in types:
-            if glob.glob(f"{in_path}/{t}") != []:  # TODO Should I add here ** for recursive search?
-                f_l = glob.glob(f"{in_path}/{t}")
-                for f in f_l:
-                    files.append(f)
+        files = SharedUtility.generate_file_list(path=input_path)
 
         if len(files) == 0:
-            print(f"No image files found in {in_path}\n Exiting.")
+            print(f"No image files found in {input_path}\n Exiting.")  # TODO Add stop of the programm.
 
         else:
-
+            # Creating list of dictionaries for parallel processing.
             params = []
+
             for f in files:
                 params.append({
                     "thresh": thresh
                     , "crop": extra_crop
                     , "filename": f
-                    , "out_path": out_path
-                    })  # This results in a list of dictionaries, which each will be processed in the next step.
+                    , "output_path": output_path
+                    })
 
+            # Parallel fine cut of the scanned images.
             with Pool(num_threads) as p:
-                results = p.map(cls.autocrop, params)  # TODO does this even need any output?
+                p.map(cls.autocrop, params)
+
+            print("\n[Status] Finished FineCut.")
 
     @classmethod
-    def autocrop(cls, params):
-        thresh = params['thresh']
-        crop = params['crop']
-        filename = params['filename']
-        out_path = params['out_path']
+    def autocrop(cls, params: dict):
+        thresh = params["thresh"]
+        crop = params["crop"]
+        filename = params["filename"]
+        output_path = params["output_path"]
 
         print(f"Opening: {filename}")
         name = Path(filename).name
@@ -72,20 +68,20 @@ class FineCut:
         found, img = cls.cont(img=img, gray=gray, user_thresh=thresh, crop=crop)
 
         if found:
-            print(f"Saving to: {out_path}/{name}")
+            print(f"Saving to: {output_path}/{name}")
             try:
-                cv2.imwrite(f"{out_path}/{name}", img, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
+                cv2.imwrite(f"{output_path}/{name}", img, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
             except:
                 None
-            # TODO: this is always writing JPEG, no matter what was the input file type, can we detect this?
+            # TODO: This is always writing JPEG, no matter what the input file type was. Nice to have: Change this.
 
         else:
-            # if no contours were found, write input file to "failed" folder
-            print(f"Failed finding any contour. Saving original file to {out_path}/failed/{name}")
-            if not os.path.exists(f"{out_path}/failed/"):
-                os.makedirs(f"{out_path}/failed/")
+            # If no contours were found, write input file to "failed" folder
+            print(f"Failed finding any contour. Saving original file to {output_path}/failed/{name}")
+            if not os.path.exists(f"{output_path}/failed/"):
+                os.makedirs(f"{output_path}/failed/")
 
-            with open(filename, "rb") as in_f, open(f"{out_path}/failed/{name}", "wb") as out_f:
+            with open(filename, "rb") as in_f, open(f"{output_path}/failed/{name}", "wb") as out_f:
                 while True:
                     buf = in_f.read(1024**2)
                     if not buf:  # TODO Understand this. When will this be triggered?
