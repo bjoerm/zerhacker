@@ -1,7 +1,7 @@
 # Folders:
 parent_path_images = "pictures"
 
-untouched_scans_path = "1_untouched"  # TODO This could be an argument.
+untouched_scans_path = "1_untouched"
 rough_cut_path = "2_rough_cut"
 fine_cut_path = "3_output"
 
@@ -13,4 +13,4 @@ detection_threshold = 190  # Note that this parameter refers to THRESH_BINARY_IN
 
 # Finecut
 detection_threshold_finecut = 200  # Threshold value: Higher values represent less aggressive contour search. If it's chosen too high, a white border will be introduced.
-extra_crop = 5  # Extra crop: After crop/rotate often a small white border remains. This removes this. If it cuts off too much of your image, adjust this.
+extra_crop = 10  # Extra crop: After crop/rotate often a small white border remains. This removes this. If it cuts off too much of your image, adjust this.
