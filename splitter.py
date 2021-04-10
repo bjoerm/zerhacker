@@ -5,7 +5,7 @@ import cv2
 from pathlib import Path
 from shared_utils import SharedUtility
 from multiprocessing import Pool
-
+import numpy as np
 
 class Splitter:
     """ This utility class detects and extracts single images from a big scanned image. """
@@ -48,7 +48,9 @@ class Splitter:
         min_pixels = params["min_pixels"]
         detection_threshold = params["detection_threshold"]
 
-        image = cv2.imread(filename=input_image_path)
+        image = cv2.imdecode(np.fromfile(input_image_path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)  # cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. From: https://stackoverflow.com/a/57872297
+
+
         original = image.copy()
         gray = cv2.cvtColor(src=image, code=cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(src=gray, ksize=(3, 3), sigmaX=0)
@@ -80,13 +82,30 @@ class Splitter:
             # Create folders, if not exists. (Is required if there are folders in the input.)
             output_image_path = str(input_image_path).replace(input_path, output_path)
             Path(output_image_path).parent.mkdir(parents=True, exist_ok=True)
-            cv2.imwrite(output_image_path.replace(".jpg", f"_cr_{image_number}.jpg"), cropped, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
+
+            # Saving image. imwrite does not work with German Umlaute and other special characters. Thus, the following solution.
+            # Encode the im_resize into the im_buf_cropped, which is a one-dimensional ndarray (from https://jdhao.github.io/2019/09/11/opencv_unicode_image_path/#write-images-with-unicode-paths)
+            is_success, im_buf_cropped = cv2.imencode(".jpg", cropped, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
+
+            if is_success is True:
+                im_buf_cropped.tofile(output_image_path.replace(".jpg", f"_cr_{image_number}.jpg"))
+
+            else:
+                print("WARNING File could not be read.")
 
             image_number += 1
 
         # When no contours are found or only too small contours are detected, copy the image to a special folder in the output folder.
         if len(cnts) == 0 or image_number == too_small_contour_count:
             (Path(str(input_image_path).replace(input_path, output_path)).parent / Path("no_crop_done")).mkdir(parents=True, exist_ok=True)
-            cv2.imwrite(str(input_image_path).replace(input_path, output_path + "/no_crop_done/"), original, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
+
+            # Saving image. imwrite does not work with German Umlaute and other special characters. Thus, the following solution.
+            # Encode the im_resize into the im_buf_cropped, which is a one-dimensional ndarray (from https://jdhao.github.io/2019/09/11/opencv_unicode_image_path/#write-images-with-unicode-paths)
+            is_success, im_buf_cropped = cv2.imencode(".jpg", original, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
+
+            if is_success is True:
+                im_buf_cropped.tofile(str(input_image_path).replace(input_path, output_path + "/no_crop_done/"))
+            else:
+                print("WARNING File could not be read.")
 
         return
