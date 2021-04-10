@@ -1,12 +1,14 @@
 # Original source: https://github.com/z80z80z80/autocrop
 
-import cv2
-import numpy as np
-import os
 from multiprocessing import Pool
 from pathlib import Path
-from shared_utils import SharedUtility
 from shutil import copyfile
+
+import cv2
+import numpy as np
+import tqdm
+
+from shared_utils import SharedUtility
 
 
 class FineCut:
@@ -21,9 +23,8 @@ class FineCut:
 
         Number of threads to be used to process the images in parallel. If not provided, the script will try to find the value itself (which doesn't work on Windows or MacOS -> defaults to 1 thread only).
         """
-        # TODO DELETE???
-        # input_path = Path(parent_path_images) / Path(input_path)
-        # output_path = Path(parent_path_images) / Path(output_path)
+
+        print("\n[Status] Started FineCut.")
 
         files = SharedUtility.generate_file_list(path=Path(parent_path_images) / Path(input_path))
 
@@ -45,7 +46,7 @@ class FineCut:
 
             # Parallel fine cut of the scanned images.
             with Pool(num_threads) as p:
-                p.map(cls.autocrop, params)
+                list(tqdm.tqdm(p.imap(cls.autocrop, params), total=len(params)))
 
             print("\n[Status] Finished FineCut.")
 
@@ -56,8 +57,6 @@ class FineCut:
         output_path = params["output_path"]
         thresh = params["thresh"]
         crop = params["crop"]
-
-        name = Path(input_image_path).name
 
         img = cv2.imdecode(np.fromfile(input_image_path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)  # cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. From: https://stackoverflow.com/a/57872297
 
@@ -197,7 +196,6 @@ class FineCut:
                             break
 
                         # print(f"Adjust Threshold: {user_thresh}")
-
 
                         if user_thresh == old_val - 5:
                             loop = True

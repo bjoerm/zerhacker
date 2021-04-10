@@ -1,11 +1,12 @@
-# TODO Add parallel execution. See the autocrop part.
-# TODO Add status messages or progress bar.
+from multiprocessing import Pool
+from pathlib import Path
 
 import cv2
-from pathlib import Path
-from shared_utils import SharedUtility
-from multiprocessing import Pool
 import numpy as np
+import tqdm
+
+from shared_utils import SharedUtility
+
 
 class Splitter:
     """ This utility class detects and extracts single images from a big scanned image. """
@@ -13,6 +14,8 @@ class Splitter:
     @classmethod
     def main(cls, parent_path_images: str, input_path: str, output_path: str, min_pixels: int, detection_threshold: int, num_threads: int):
         """ TODO """
+
+        print("\n[Status] Started Splitter.")
 
         files = SharedUtility.generate_file_list(path=Path(parent_path_images) / Path(input_path))
 
@@ -32,9 +35,8 @@ class Splitter:
                     , "detection_threshold": detection_threshold
                     })
 
-            # Parallel slitting of the scanned images.
             with Pool(num_threads) as p:
-                p.map(cls._split_scanned_image, params)
+                list(tqdm.tqdm(p.imap(cls._split_scanned_image, params), total=len(params)))
 
         print("\n[Status] Finished Splitter.")
 
