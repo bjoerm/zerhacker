@@ -52,7 +52,6 @@ class Splitter:
 
         image = cv2.imdecode(np.fromfile(input_image_path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)  # cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. From: https://stackoverflow.com/a/57872297
 
-
         original = image.copy()
         gray = cv2.cvtColor(src=image, code=cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(src=gray, ksize=(3, 3), sigmaX=0)

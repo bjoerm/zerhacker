@@ -62,9 +62,9 @@ class FineCut:
 
         # Add white background (in case one side is cropped right already, otherwise script would fail finding contours)
         img = cv2.copyMakeBorder(src=img, top=100, bottom=100, left=100, right=100, borderType=cv2.BORDER_CONSTANT, value=[255, 255, 255])
-        im_h, im_w = img.shape[:2]
+
         gray = cv2.cvtColor(src=img, code=cv2.COLOR_BGR2GRAY)
-        res_gray = cv2.resize(src=img, dsize=(int(im_w / 6), int(im_h / 6)), interpolation=cv2.INTER_CUBIC)  # TODO What is this need for? Try to understand before dropping it?
+
         found, img = cls.cont(img=img, gray=gray, user_thresh=thresh, crop=crop)
 
         output_image_path = ""
