@@ -1,20 +1,17 @@
 # TODO Check https://github.com/Claytorpedo/scan-cropper/blob/master/scan_cropper.py
 
-# TODO Multicrop does not work well with subfolders as of now.
-# TODO Add multithreading to multicrop.
-# TODO multicrop and potentially other parts do not like Umlaute in paths. Fix this.
 # TODO Add documentation to the methods in finecut.
 # TODO Tidy up the main function in finecut
 # TODO Throw away finecut unused elements.
 # TODO Low prio: Multicrop and finebut don't use the same THRESHOLD system. One uses cv.THRESH_BINARY while the other uses THRESH_BINARY_INV. Change it so that both use the same metric. multicrop should be easier to change w.r.t. this.
 
 
-from shared_utils import SharedUtility
 import toml
 
 from environment import Environment
-from splitter import Splitter
 from finecut import FineCut
+from shared_utils import SharedUtility
+from splitter import Splitter
 
 
 def main():

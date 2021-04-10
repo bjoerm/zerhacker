@@ -1,6 +1,6 @@
 from pathlib import Path
 
-# TODO Maybe add a check for supported file types.
+# TODO Merge this with the shared_utils class.
 
 
 class Environment:
