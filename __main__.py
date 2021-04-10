@@ -9,11 +9,11 @@
 # TODO Low prio: Multicrop and finebut don't use the same THRESHOLD system. One uses cv.THRESH_BINARY while the other uses THRESH_BINARY_INV. Change it so that both use the same metric. multicrop should be easier to change w.r.t. this.
 
 
-
+from shared_utils import SharedUtility
 import toml
 
 from environment import Environment
-from multicrop import MultiCrop
+from splitter import Splitter
 from finecut import FineCut
 
 
@@ -23,11 +23,9 @@ def main():
 
     Environment.initiate(cfg.get("parent_path_images"), cfg.get("untouched_scans_path"), cfg.get("rough_cut_path"), cfg.get("fine_cut_path"))
 
-    # TODO Nice to have: A class that rotates pictures automatically (e.g. if they are scanned upside down).
+    Splitter.main(parent_path_images=cfg.get("parent_path_images"), input_path=cfg.get("untouched_scans_path"), output_path=cfg.get("rough_cut_path"), min_pixels=cfg.get("min_pixels"), detection_threshold=cfg.get("detection_threshold"))
 
-    MultiCrop.main(parent_path_images=cfg.get("parent_path_images"), input_path=cfg.get("untouched_scans_path"), output_path=cfg.get("rough_cut_path"), min_pixels=cfg.get("min_pixels"), detection_threshold=cfg.get("detection_threshold"))
-
-    FineCut.main(parent_path_images=cfg.get("parent_path_images"), in_path=cfg.get("rough_cut_path"), out_path=cfg.get("fine_cut_path"), thresh=cfg.get("detection_threshold_finecut"), extra_crop=cfg.get("extra_crop"), num_threads=Environment.get_available_threads())
+    FineCut.main(parent_path_images=cfg.get("parent_path_images"), in_path=cfg.get("rough_cut_path"), out_path=cfg.get("fine_cut_path"), thresh=cfg.get("detection_threshold_finecut"), extra_crop=cfg.get("extra_crop"), num_threads=SharedUtility.get_available_threads())
 
 
 if __name__ == "__main__":

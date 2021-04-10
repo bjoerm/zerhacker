@@ -7,7 +7,7 @@ from shared_utils import SharedUtility
 from multiprocessing import Pool
 
 
-class MultiCrop:
+class Splitter:
     """ This utility class detects and extracts single images from a big scanned image. """
 
     @classmethod
@@ -18,6 +18,8 @@ class MultiCrop:
 
         for i in file_list:
             cls._split_scanned_image(image_path=i, input_path=input_path, output_path=output_path, min_pixels=min_pixels, detection_threshold=detection_threshold)
+
+        print("\n[Status] Finished Splitter.")
 
     @staticmethod
     def _split_scanned_image(image_path: str, input_path: str, output_path: str, min_pixels: int, detection_threshold: int):
@@ -52,6 +54,8 @@ class MultiCrop:
 
             cropped = original[y: y + h, x: x + w]  # The cropped image.
 
+            # Create folders, if not exists. (Is required if there are folders in the input.)
+            Path(str(image_path).replace(input_path, output_path)).parent.mkdir(parents=True, exist_ok=True)  # TODO MAKE THIS A SHARED UTILITY FUNCTION. ALSO INCLUDE THE ONE FROM ENVIRONMENT!!!
             cv2.imwrite(str(image_path).replace(input_path, output_path).replace(".jpg", f"_cr_{image_number}.jpg"), cropped, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
 
             image_number += 1
