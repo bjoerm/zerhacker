@@ -1,5 +1,7 @@
 # Original source: https://github.com/z80z80z80/autocrop
 
+# TODO Add filename of the detected edge cases to the print.
+
 from multiprocessing import Pool
 from pathlib import Path
 from shutil import copyfile
