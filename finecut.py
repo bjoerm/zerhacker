@@ -58,7 +58,8 @@ class FineCut:
         crop = params["crop"]
 
         name = Path(input_image_path).name
-        img = cv2.imread(input_image_path)
+
+        img = cv2.imdecode(np.fromfile(input_image_path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)  # cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. From: https://stackoverflow.com/a/57872297
 
         # Add white background (in case one side is cropped right already, otherwise script would fail finding contours)
         img = cv2.copyMakeBorder(src=img, top=100, bottom=100, left=100, right=100, borderType=cv2.BORDER_CONSTANT, value=[255, 255, 255])
@@ -73,7 +74,16 @@ class FineCut:
             # Create folders, if not exists. (Is required if there are folders in the input.)
             output_image_path = str(input_image_path).replace(input_path, output_path)
             Path(output_image_path).parent.mkdir(parents=True, exist_ok=True)
-            cv2.imwrite(output_image_path, img, [int(cv2.IMWRITE_JPEG_QUALITY), 95])  # TODO: This is always writing JPEG, no matter what the input file type was. Nice to have: Change this.
+
+            # Saving image. imwrite does not work with German Umlaute and other special characters. Thus, the following solution.
+            # Encode the im_resize into the im_buf_cropped, which is a one-dimensional ndarray (from https://jdhao.github.io/2019/09/11/opencv_unicode_image_path/#write-images-with-unicode-paths)
+            is_success, im_buf_cropped = cv2.imencode(".jpg", img, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
+
+            if is_success is True:
+                im_buf_cropped.tofile(output_image_path)
+
+            else:
+                print("WARNING File could not be read.")
 
         else:
             # If no contours were found, write input file to "failed" folder
@@ -81,17 +91,6 @@ class FineCut:
             Path(output_image_path).parent.mkdir(parents=True, exist_ok=True)
 
             copyfile(input_image_path, output_image_path)
-
-            # if not os.path.exists(f"{output_path}/failed/"):
-            #     os.makedirs(f"{output_path}/failed/")
-
-            # with open(filename, "rb") as in_f, open(f"{output_path}/failed/{name}", "wb") as out_f:
-            #     while True:
-            #         buf = in_f.read(1024**2)
-            #         if not buf:  # TODO Understand this. When will this be triggered?
-            #             break
-            #         else:
-            #             out_f.write(buf)
 
     def order_rect(points):
         # idea: https://www.pyimagesearch.com/2014/08/25/4-point-opencv-getperspective-transform-example/
