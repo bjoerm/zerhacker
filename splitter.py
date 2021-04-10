@@ -105,7 +105,7 @@ class Splitter:
             is_success, im_buf_cropped = cv2.imencode(".jpg", original, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
 
             if is_success is True:
-                im_buf_cropped.tofile(str(input_image_path).replace(input_path, output_path + "/no_crop_done/"))
+                im_buf_cropped.tofile(str(Path(str(input_image_path).replace(input_path, output_path)).parent / Path("no_crop_done") / Path(input_image_path).name))
             else:
                 print("WARNING File could not be read.")
 
