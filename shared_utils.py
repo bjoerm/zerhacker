@@ -11,7 +11,16 @@ class SharedUtility:
         """ Generate a list of all images in the input path. """
 
         file_list_gen = Path(path)
-        file_list = [str(f.parent / f.name) for f in file_list_gen.rglob("*.jpg")]  # TODO Deal with .jpeg, .JPG, ... # rglob is recursive.
+        file_list = [str(f.parent / f.name) for f in file_list_gen.rglob("*.jpg")]  # rglob is recursive. # TODO Deal with .jpeg, .JPG, ...
+
+        # # TODO Example of how to deal with multiple file extensions:
+        # types = ("*.jpg", "*.JPG", "*.JPEG", "*.jpeg", "*.png", "*.PNG")  # TODO use this approach in the other class as well. But then also fix the the file output there, which is hard coded to .jpg.
+
+        # for t in types:
+        #     if glob.glob(f"{input_path}/{t}") != []:  # TODO Should I add here ** for recursive search?
+        #         f_l = glob.glob(f"{input_path}/{t}")
+        #         for f in f_l:
+        #             files.append(f)
 
         return file_list
 
@@ -26,6 +35,6 @@ class SharedUtility:
             print("Automatic thread detection didn't work. Defaulting to 1 thread only.")
             num_threads = 1
 
-        print(f"Using {num_threads} threads.")
+        print(f"\n[Status] Using {num_threads} threads.")
 
         return num_threads
