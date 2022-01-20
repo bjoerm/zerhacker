@@ -51,40 +51,39 @@ class Splitter:
             with Pool(num_threads) as p:
                 list(
                     tqdm.tqdm(
-                        p.imap(cls._split_scanned_image, params), total=len(params)
+                        p.imap(cls.split_scanned_image, params), total=len(params)
                     )
                 )
 
         print("\n[Status] Finished Splitter.")
 
-    @staticmethod
-    def _split_scanned_image(params: dict):
+    @classmethod
+    def split_scanned_image(cls, params: dict):
         """Detects and extracts single images from a big scanned image."""
 
-        input_image_path = params["input_image_path"]
-        input_path = params["input_path"]
-        output_path = params["output_path"]
-        min_pixels = params["min_pixels"]
-        detection_threshold = params["detection_threshold"]
+        input_image_path = params.get("input_image_path")
+        input_path = params.get("input_path")
+        output_path = params.get("output_path")
+        min_pixels = params.get("min_pixels")
+        detection_threshold = params.get("detection_threshold")
 
-        image = cv2.imdecode(
+        original = cv2.imdecode(
             np.fromfile(input_image_path, dtype=np.uint8), cv2.IMREAD_UNCHANGED
         )  # cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. From: https://stackoverflow.com/a/57872297
 
-        thresh = _prepare_image(image, detection_threshold)
+        thresh = cls.prepare_image(original, detection_threshold)
+        cnts = cls.find_contours(thresh)
 
-        # Find contours
-        cnts = cv2.findContours(
-            image=thresh, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE
-        )
-        cnts = cnts[0] if len(cnts) == 2 else cnts[1]
-        cnts.reverse()  # Reversing the list so the the found contours start at the top left and not at the bottom.
+        # def extract_contours(
+        #     image, cnts, min_pixels, input_image_path, input_path, output_path
+        # ):
+        #     pass
 
         # Iterate through contours and filter for cropped
         image_number = 0
         too_small_contour_count = 0
 
-        found_pictures = image.copy()
+        found_pictures = original.copy()
 
         for c in cnts:
             x, y, w, h = cv2.boundingRect(c)
@@ -102,9 +101,9 @@ class Splitter:
                 thickness=25,
             )
 
-            cropped = image[y : y + h, x : x + w]  # The cropped image.
+            cropped = original[y : y + h, x : x + w]  # The cropped image.
 
-            # Create folders, if not exists. (Is required if there are folders in the input.)
+            # Ensure that (sub) folders for the respective album exist. (Is required if there are folders in the input.)
             output_image_path = str(input_image_path).replace(input_path, output_path)
             Path(output_image_path).parent.mkdir(parents=True, exist_ok=True)
 
@@ -142,7 +141,7 @@ class Splitter:
             # Saving image. imwrite does not work with German Umlaute and other special characters. Thus, the following solution.
             # Encode the im_resize into the im_buf_cropped, which is a one-dimensional ndarray (from https://jdhao.github.io/2019/09/11/opencv_unicode_image_path/#write-images-with-unicode-paths)
             is_success, im_buf_cropped = cv2.imencode(
-                ".jpg", image, [int(cv2.IMWRITE_JPEG_QUALITY), 95]
+                ".jpg", original, [int(cv2.IMWRITE_JPEG_QUALITY), 95]
             )
 
             if is_success is True:
@@ -160,18 +159,28 @@ class Splitter:
 
         return
 
+    @staticmethod
+    def prepare_image(image, detection_threshold):
+        gray = cv2.cvtColor(src=image, code=cv2.COLOR_BGR2GRAY)
+        blurred = cv2.GaussianBlur(src=gray, ksize=(3, 3), sigmaX=0)
+        thresh = cv2.threshold(
+            src=blurred,
+            thresh=detection_threshold,
+            maxval=255,
+            type=cv2.THRESH_BINARY_INV,  # For values on thresholds, see: https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html
+        )[1]
 
-def _prepare_image(image, detection_threshold):
-    gray = cv2.cvtColor(src=image, code=cv2.COLOR_BGR2GRAY)
-    blurred = cv2.GaussianBlur(src=gray, ksize=(3, 3), sigmaX=0)
-    thresh = cv2.threshold(
-        src=blurred,
-        thresh=detection_threshold,
-        maxval=255,
-        type=cv2.THRESH_BINARY_INV,  # For values on thresholds, see: https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html
-    )[1]
+        return thresh
 
-    return thresh
+    def find_contours(image):
+        # Find contours
+        cnts = cv2.findContours(
+            image=image, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE
+        )
+        cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+        cnts.reverse()  # Reversing the list so the the found contours start at the top left and not at the bottom.
+
+        return cnts
 
 
 if __name__ == "__main__":
