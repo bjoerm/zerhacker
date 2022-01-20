@@ -1,7 +1,7 @@
 # Folders:
 parent_path_images = "pictures"
 
-untouched_scans_path = "1_untouched"
+untouched_scans_path = "1_untouched_input"
 rough_cut_path = "2_rough_cut"
 fine_cut_path = "3_output"
 
