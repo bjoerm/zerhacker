@@ -8,52 +8,6 @@ import tqdm
 from shared_utils import SharedUtility
 
 
-def start_splitting(
-    parent_path_images: str,
-    input_path: str,
-    output_path: str,
-    min_pixels: int,
-    detection_threshold: int,
-    num_threads: int,
-):
-
-    print("\n[Status] Started Splitter.")
-
-    files = SharedUtility.generate_file_list(
-        path=Path(parent_path_images) / Path(input_path)
-    )
-
-    if len(files) == 0:
-        print(
-            f"No image files found in {input_path}\n Exiting."
-        )  # TODO Add stop of the programm.
-
-    else:
-        # Creating list of dictionaries for parallel processing.
-        params = []
-
-        for f in files:
-            params.append(
-                {
-                    "input_image_path": f,
-                    "input_path": input_path,
-                    "output_path": output_path,
-                    "min_pixels": min_pixels,
-                    "detection_threshold": detection_threshold,
-                }
-            )
-
-        with Pool(num_threads) as p:
-            list(tqdm.tqdm(p.imap(call_splitter, params), total=len(params)))
-
-    print("\n[Status] Finished Splitter.")
-
-
-def call_splitter(params: dict):
-    split_worker = Splitter(params)
-    split_worker.split_scanned_image()
-
-
 class Splitter:
     """This class detects and extracts individual images from a big scanned image."""
 
@@ -64,6 +18,7 @@ class Splitter:
         self.min_pixels = params.get("min_pixels")
         self.detection_threshold = params.get("detection_threshold")
         self.original = None
+        self.contours = None
 
     def split_scanned_image(self):
         """Detects and extracts single images from a big scanned image."""
@@ -73,8 +28,8 @@ class Splitter:
         )  # cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. From: https://stackoverflow.com/a/57872297
 
         thresh = self.prepare_image()
-        cnts = self.find_contours(thresh)
-        self.extract_contours(cnts)
+        self.find_contours(thresh)
+        self.extract_contours()
 
     def prepare_image(self):
         gray = cv2.cvtColor(src=self.original, code=cv2.COLOR_BGR2GRAY)
@@ -90,15 +45,15 @@ class Splitter:
 
     def find_contours(self, image):
         # Find contours
-        cnts = cv2.findContours(
+        self.contours = cv2.findContours(
             image=image, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE
         )
-        cnts = cnts[0] if len(cnts) == 2 else cnts[1]
-        cnts.reverse()  # Reversing the list so the the found contours start at the top left and not at the bottom.
+        self.contours = (
+            self.contours[0] if len(self.contours) == 2 else self.contours[1]
+        )
+        self.contours.reverse()  # Reversing the list so the the found contours start at the top left and not at the bottom.
 
-        return cnts
-
-    def extract_contours(self, cnts):
+    def extract_contours(self):
 
         # Iterate through contours and filter for cropped
         image_number = 0
@@ -106,7 +61,9 @@ class Splitter:
 
         found_pictures = self.original.copy()
 
-        for c in cnts:
+        for c in self.contours:
+            # TODO Split this into multiple smaller functions.
+
             x, y, w, h = cv2.boundingRect(c)
 
             if w < self.min_pixels or h < self.min_pixels:
@@ -155,7 +112,7 @@ class Splitter:
         )
 
         # When no contours are found or only too small contours are detected, copy the image to a special folder in the output folder.
-        if len(cnts) == 0 or image_number == too_small_contour_count:
+        if len(self.contours) == 0 or image_number == too_small_contour_count:
             (
                 Path(
                     str(self.input_image_path).replace(
@@ -189,8 +146,57 @@ class Splitter:
         return
 
 
+def start_splitting(
+    parent_path_images: str,
+    input_path: str,
+    output_path: str,
+    min_pixels: int,
+    detection_threshold: int,
+    num_threads: int,
+):
+    """Split a list of images. Uses multiple CPU threads to split faster."""
+
+    print("\n[Status] Started Splitter.")
+
+    files = SharedUtility.generate_file_list(
+        path=Path(parent_path_images) / Path(input_path)
+    )
+
+    if len(files) == 0:
+        print(
+            f"No image files found in {input_path}\n Exiting."
+        )  # TODO Add stop of the programm.
+
+    else:
+        # Creating list of dictionaries for parallel processing.
+        params = []
+
+        for f in files:
+            params.append(
+                {
+                    "input_image_path": f,
+                    "input_path": input_path,
+                    "output_path": output_path,
+                    "min_pixels": min_pixels,
+                    "detection_threshold": detection_threshold,
+                }
+            )
+
+        with Pool(num_threads) as p:
+            list(tqdm.tqdm(p.imap(_call_splitter, params), total=len(params)))
+
+    print("\n[Status] Finished Splitter.")
+
+
+def _call_splitter(params: dict):
+    """Function to be called by multiple threads in parallel."""
+    split_worker = Splitter(params)
+    split_worker.split_scanned_image()
+
+
 if __name__ == "__main__":
     import toml
+
     from environment import Environment
 
     # Load options

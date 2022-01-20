@@ -3,7 +3,7 @@
 # TODO Add documentation to the methods in finecut.
 # TODO Tidy up the main function in finecut
 # TODO Throw away finecut unused elements.
-# TODO Low prio: Multicrop and finebut don't use the same THRESHOLD system. One uses cv.THRESH_BINARY while the other uses THRESH_BINARY_INV. Change it so that both use the same metric. multicrop should be easier to change w.r.t. this.
+# TODO Low prio: Splitter and finecut don't use the same THRESHOLD system. One uses cv.THRESH_BINARY while the other uses THRESH_BINARY_INV. Change it so that both use the same metric. Splitter should be easier to change w.r.t. this.
 
 
 import toml
