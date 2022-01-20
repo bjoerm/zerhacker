@@ -11,7 +11,7 @@ import toml
 from environment import Environment
 from finecut import FineCut
 from shared_utils import SharedUtility
-from splitter import Splitter
+from splitter import start_splitting
 
 
 def main():
@@ -27,7 +27,7 @@ def main():
 
     cfg["num_threads"] = SharedUtility.get_available_threads()
 
-    Splitter.main(
+    start_splitting(
         parent_path_images=cfg.get("parent_path_images"),
         input_path=cfg.get("untouched_scans_path"),
         output_path=cfg.get("rough_cut_path"),
