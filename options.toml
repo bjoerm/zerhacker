@@ -8,7 +8,7 @@ fine_cut_path = "3_output"
 
 # Splitter
 min_pixel_ratio = 0.05    # Minimum ratio of height/width of the scanned image that any contour must reach. Else the contour will be omitted.
-detection_threshold = 190 # Note that this parameter refers to THRESH_BINARY_INV. Can be set between 0 and 255. https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html
+detection_threshold = 190 # The lower the less contours are detected. Note that this parameter refers to THRESH_BINARY_INV. Can be set between 0 and 255. https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html
 
 
 # Finecut
