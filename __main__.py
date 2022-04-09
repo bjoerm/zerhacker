@@ -31,7 +31,7 @@ def main():
         parent_path_images=cfg.get("parent_path_images"),
         input_path=cfg.get("untouched_scans_path"),
         output_path=cfg.get("rough_cut_path"),
-        min_pixels=cfg.get("min_pixels"),
+        min_pixel_ratio=cfg.get("min_pixel_ratio"),
         detection_threshold=cfg.get("detection_threshold"),
         num_threads=cfg.get("num_threads"),
     )

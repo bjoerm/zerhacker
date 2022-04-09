@@ -19,18 +19,19 @@ class Splitter:
 
         self.img_original = cv2.imdecode(np.fromfile(self.input_image_path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)  # cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. From: https://stackoverflow.com/a/57872297
 
-        self.min_pixels = params.get("min_pixels")
+        self.img_original_height, self.img_original_width, _ = self.img_original.shape
+
+        self.min_pixels = int(min(self.img_original_height * params.get("min_pixel_ratio"), self.img_original_width * params.get("min_pixel_ratio")))  # Set minimum pixel threshold for filtering out any too small contours.
+
         self.detection_threshold = params.get("detection_threshold")
         self.jpg_quality = 95  # TODO Ideally use the same quality that the input file had, if this is saved in a jpg file when saving.
+        self.found_images = 0
 
     def split_scanned_image(self):
         """This is the main method of this class."""
 
         self.find_contours()
-
         self.save_found_contours()
-
-        self.found_images = 0
 
         for contour in self._contours:
             self.extract_and_save_found_image(contour)
@@ -42,15 +43,13 @@ class Splitter:
     def find_contours(self):
         """Find contours in scanned image that meet size requirements."""
         self._prepare_image_for_contour_search()
-
         self._contours = cv2.findContours(image=self._thresh, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)
-
         self._contours = self._contours[0] if len(self._contours) == 2 else self._contours[1]
-
         self._contours.reverse()  # Reversing the list so the found contours start at the top left and not at the bottom.
 
         # Filter out too small contours
         self._contours = [self._filter_out_too_small_contours(c) for c in self._contours]
+        self._contours = [self._filter_out_contours_with_odd_width_height_ratios(c) for c in self._contours]
         self._contours = [i for i in self._contours if i is not None]
 
     def _prepare_image_for_contour_search(self):
@@ -68,6 +67,8 @@ class Splitter:
 
     def _filter_out_too_small_contours(self, contour):
         """Remove contours that are smaller than the set pixel threshold."""
+        if contour is None:
+            return None
 
         x, y, w, h = cv2.boundingRect(contour)
 
@@ -76,11 +77,26 @@ class Splitter:
         else:
             return None
 
+    def _filter_out_contours_with_odd_width_height_ratios(self, contour):
+        """A scanned picture should have a certain ratio between height and width. Omit contours without those."""
+        if contour is None:
+            return None
+
+        x, y, w, h = cv2.boundingRect(contour)
+
+        if w / h <= 5 or h / w <= 5:  # The lower the ratio the more likely false positives. The higher the ratio, the less contours will be filtered by this.
+            return contour
+        else:
+            return None
+
     def save_found_contours(self):
         """Saves found contours as overlay to the image (in a separate output folder). This can be used for checks of the set thresholds and parameters."""
 
         pic_with_contours = self.img_original.copy()
-        cv2.drawContours(image=pic_with_contours, contours=self._contours, contourIdx=-1, color=(0, 255, 0), thickness=15, lineType=cv2.LINE_AA)
+
+        contour_thickness = int(max(self.img_original_height / 500, self.img_original_width / 500, 2))  # Dynamicly based on orig image size.
+
+        cv2.drawContours(image=pic_with_contours, contours=self._contours, contourIdx=-1, color=(0, 255, 0), thickness=contour_thickness, lineType=cv2.LINE_AA)
 
         SharedUtility.save_image(pic_with_contours, Path(self.output_contour_debug_path), self.jpg_quality)
 
@@ -100,7 +116,7 @@ def start_splitting(
     parent_path_images: str,
     input_path: str,
     output_path: str,
-    min_pixels: int,
+    min_pixel_ratio: int,
     detection_threshold: int,
     num_threads: int,
 ):
@@ -123,7 +139,7 @@ def start_splitting(
                     "input_image_path": f,
                     "input_path": input_path,
                     "output_path": output_path,
-                    "min_pixels": min_pixels,
+                    "min_pixel_ratio": min_pixel_ratio,
                     "detection_threshold": detection_threshold,
                 }
             )
