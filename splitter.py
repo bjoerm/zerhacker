@@ -9,146 +9,91 @@ from shared_utils import SharedUtility
 
 
 class Splitter:
-    """This class detects and extracts individual images from a big scanned image."""
+    """This class detects and extracts individual images from a single big scanned image."""
 
     def __init__(self, params: dict):
-        self.input_image_path = params.get("input_image_path")
-        self.output_image_path = str(self.input_image_path).replace(
-            params.get("input_path"), params.get("output_path")
-        )
+        self.input_image_path = Path(params.get("input_image_path"))
+        self.output_image_path = Path(str(self.input_image_path).replace(params.get("input_path"), params.get("output_path")))
+        self.output_no_contour_path = Path(self.output_image_path).parent / Path("no_contour_detected") / Path(self.input_image_path).name
+        self.output_contour_debug_path = Path(self.output_image_path).parent / Path("contour_debug") / Path(self.input_image_path).name
 
-        self.original = cv2.imdecode(
-            np.fromfile(self.input_image_path, dtype=np.uint8), cv2.IMREAD_UNCHANGED
-        )  # cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. From: https://stackoverflow.com/a/57872297
+        self.img_original = cv2.imdecode(np.fromfile(self.input_image_path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)  # cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. From: https://stackoverflow.com/a/57872297
 
         self.min_pixels = params.get("min_pixels")
         self.detection_threshold = params.get("detection_threshold")
         self.jpg_quality = 95  # TODO Ideally use the same quality that the input file had, if this is saved in a jpg file when saving.
 
-    def prepare_image(self):
-        """Transform the image so that contours can best be found."""
+    def split_scanned_image(self):
+        """This is the main method of this class."""
 
-        gray = cv2.cvtColor(src=self.original, code=cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(src=gray, ksize=(3, 3), sigmaX=0)
+        self.find_contours()
+
+        self.save_found_contours()
+
+        self.found_images = 0
+
+        for contour in self._contours:
+            self.extract_and_save_found_image(contour)
+
+        # When no contours are found or only too small contours are detected, copy the image to a special folder in the output folder.
+        if self.found_images == 0:
+            SharedUtility.save_image(self.img_original, self.output_no_contour_path, self.jpg_quality)
+
+    def find_contours(self):
+        """Find contours in scanned image that meet size requirements."""
+        self._prepare_image_for_contour_search()
+
+        self._contours = cv2.findContours(image=self._thresh, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)
+
+        self._contours = self._contours[0] if len(self._contours) == 2 else self._contours[1]
+
+        self._contours.reverse()  # Reversing the list so the found contours start at the top left and not at the bottom.
+
+        # Filter out too small contours
+        self._contours = [self._filter_out_too_small_contours(c) for c in self._contours]
+        self._contours = [i for i in self._contours if i is not None]
+
+    def _prepare_image_for_contour_search(self):
+        """Transform the image so that contours can be found best."""
+
+        img_gray = cv2.cvtColor(src=self.img_original, code=cv2.COLOR_BGR2GRAY)
+        img_blurred = cv2.GaussianBlur(src=img_gray, ksize=(3, 3), sigmaX=0)
 
         self._thresh = cv2.threshold(
-            src=blurred,
+            src=img_blurred,
             thresh=self.detection_threshold,
             maxval=255,
             type=cv2.THRESH_BINARY_INV,  # For values on thresholds, see: https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html
         )[1]
 
-    def find_contours(self):
-        """Find contours"""
-        self.prepare_image()
-
-        self._contours = cv2.findContours(
-            image=self._thresh, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE
-        )
-
-        self._contours = (
-            self._contours[0] if len(self._contours) == 2 else self._contours[1]
-        )
-
-        self._contours.reverse()  # Reversing the list so the found contours start at the top left and not at the bottom.
-
-        # TODO test = [self._filter_out_contours(c) for c in self._contours]  # TODO this is not yet used and it also would need to be expanded to deal with the returned Nones properly.
-
-    def _filter_out_contours(self, contour):
+    def _filter_out_too_small_contours(self, contour):
         """Remove contours that are smaller than the set pixel threshold."""
 
         x, y, w, h = cv2.boundingRect(contour)
 
-        if w < self.min_pixels or h < self.min_pixels:
-            return None
-        else:
+        if w >= self.min_pixels and h >= self.min_pixels:
             return contour
-
-    def extract_single_images(self):
-        """TODO"""
-
-        self.find_contours()
-
-        # Iterate through contours and filter for cropped
-        self._found_images = 0
-
-        found_pictures = self.original.copy()
-
-        for c in self._contours:
-            # TODO Split this into multiple smaller functions.
-
-            x, y, w, h = cv2.boundingRect(c)
-
-            if w < self.min_pixels or h < self.min_pixels:
-                continue  # If the detected rectangle is smaller than x min_pixels in either width or height, skip this rectangle/contour.
-
-            else:
-                # Mark on the big scanned image all found single images.
-                found_pictures = cv2.rectangle(
-                    img=found_pictures,
-                    pt1=(x, y),
-                    pt2=(x + w, y + h),
-                    color=(36, 255, 12),
-                    thickness=25,
-                )
-
-                cropped = self.original[
-                    y : y + h, x : x + w
-                ]  # The found cropped image.
-
-                # Ensure that (sub) folders for the respective album exist. (Is required if there are folders in the input.)
-                Path(self.output_image_path).parent.mkdir(parents=True, exist_ok=True)
-
-                # Saving image. imwrite does not work with German Umlauten and other special characters. Thus, the following solution.
-                # Encode the im_resize into the im_buf_cropped, which is a one-dimensional ndarray (from https://jdhao.github.io/2019/09/11/opencv_unicode_image_path/#write-images-with-unicode-paths)
-                is_success, im_buf_cropped = cv2.imencode(
-                    ".jpg", cropped, [int(cv2.IMWRITE_JPEG_QUALITY), self.jpg_quality]
-                )
-
-                if is_success is True:
-                    im_buf_cropped.tofile(
-                        self.output_image_path.replace(
-                            ".jpg", f"_cr_{self._found_images}.jpg"
-                        )
-                    )
-
-                else:
-                    print("WARNING File could not be read.")
-
-                self._found_images += 1
-
-        # When no contours are found or only too small contours are detected, copy the image to a special folder in the output folder.
-        if self._found_images == 0:
-            (Path(self.output_image_path).parent / Path("no_crop_done")).mkdir(
-                parents=True, exist_ok=True
-            )
-
-            # TODO The saving part is very inconsistent. The part below uses a different approach then the saving above .tofile().
-
-            # Saving image. imwrite does not work with German Umlaute and other special characters. Thus, the following solution.
-            # Encode the im_resize into the im_buf_cropped, which is a one-dimensional ndarray (from https://jdhao.github.io/2019/09/11/opencv_unicode_image_path/#write-images-with-unicode-paths)
-            is_success, im_buf_cropped = cv2.imencode(
-                ".jpg", self.original, [int(cv2.IMWRITE_JPEG_QUALITY), self.jpg_quality]
-            )
-
-            if is_success is True:
-                im_buf_cropped.tofile(
-                    str(
-                        Path(self.output_image_path).parent
-                        / Path("no_crop_done")
-                        / Path(self.input_image_path).name
-                    )
-                )
-            else:
-                print("WARNING File could not be read.")
         else:
-            # Mark on the big scanned image all found single images.
-            cv2.imwrite(
-                filename=str(self.output_image_path).replace(".jpg", "__DEBUG.jpg"),
-                img=found_pictures,
-            )
+            return None
 
-        return
+    def save_found_contours(self):
+        """Saves found contours as overlay to the image (in a separate output folder). This can be used for checks of the set thresholds and parameters."""
+
+        pic_with_contours = self.img_original.copy()
+        cv2.drawContours(image=pic_with_contours, contours=self._contours, contourIdx=-1, color=(0, 255, 0), thickness=15, lineType=cv2.LINE_AA)
+
+        SharedUtility.save_image(pic_with_contours, Path(self.output_contour_debug_path), self.jpg_quality)
+
+    def extract_and_save_found_image(self, contour):
+        """From given contour, create a rectangle, extract that rectangle from the scanned image and save it."""
+
+        x, y, w, h = cv2.boundingRect(contour)
+
+        img_cropped = self.img_original[y : y + h, x : x + w]  # The found cropped image.
+
+        SharedUtility.save_image(img_cropped, Path(str(self.output_image_path).replace(".jpg", f"_cr_{self.found_images}.jpg")), self.jpg_quality)
+
+        self.found_images += 1
 
 
 def start_splitting(
@@ -163,14 +108,10 @@ def start_splitting(
 
     print("\n[Status] Started Splitter.")
 
-    files = SharedUtility.generate_file_list(
-        path=Path(parent_path_images) / Path(input_path)
-    )
+    files = SharedUtility.generate_file_list(path=Path(parent_path_images) / Path(input_path))
 
     if len(files) == 0:
-        print(
-            f"No image files found in {input_path}\n Exiting."
-        )  # TODO Add stop of the programm.
+        raise ValueError(f"No image files found in {input_path}\n Exiting.")
 
     else:
         # Creating list of dictionaries for parallel processing.
@@ -196,7 +137,7 @@ def start_splitting(
 def _call_splitter(params: dict):
     """Function to be called by multiple threads in parallel. See also https://stackoverflow.com/a/21345308 for another parallel package."""
     test = Splitter(params)
-    test.extract_single_images()
+    test.split_scanned_image()
 
 
 if __name__ == "__main__":
