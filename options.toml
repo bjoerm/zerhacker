@@ -1,9 +1,9 @@
 # Folders:
 parent_path_images = "pictures"
 
-untouched_scans_path = "1_untouched_input"
-rough_cut_path = "2_rough_cut"
-fine_cut_path = "3_output"
+path_untouched_scans = "1_untouched_input"
+path_rough_cut = "2_rough_cut"
+path_fine_cut = "3_output"
 
 
 # Splitter

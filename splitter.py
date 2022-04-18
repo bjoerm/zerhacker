@@ -12,12 +12,12 @@ class Splitter:
     """This class detects and extracts individual images from a single big scanned image."""
 
     def __init__(self, params: dict):
-        self.input_image_path = Path(params.get("input_image_path"))
-        self.output_image_path = Path(str(self.input_image_path).replace(params.get("input_path"), params.get("output_path")))
-        self.output_no_contour_path = Path(self.output_image_path).parent / Path("no_contour_detected") / Path(self.input_image_path).name
-        self.output_contour_debug_path = Path(self.output_image_path).parent / Path("contour_debug") / Path(self.input_image_path).name
+        self.path_input_image = Path(params.get("input_image_path"))
+        self.path_output_image = Path(str(self.path_input_image).replace(params.get("path_input"), params.get("path_output")))
+        self.path_output_no_contour = Path(self.path_output_image).parent / Path("no_contour_detected") / Path(self.path_input_image).name
+        self.path_output_contour_debug = Path(self.path_output_image).parent / Path("contour_debug") / Path(self.path_input_image).name
 
-        self.img_original = cv2.imdecode(np.fromfile(self.input_image_path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)  # cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. From: https://stackoverflow.com/a/57872297
+        self.img_original = cv2.imdecode(np.fromfile(self.path_input_image, dtype=np.uint8), cv2.IMREAD_UNCHANGED)  # cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. From: https://stackoverflow.com/a/57872297
 
         self.img_original_height, self.img_original_width, _ = self.img_original.shape
 
@@ -38,7 +38,7 @@ class Splitter:
 
         # When no contours are found or only too small contours are detected, copy the image to a special folder in the output folder.
         if self.found_images == 0:
-            SharedUtility.save_image(self.img_original, self.output_no_contour_path, self.jpg_quality)
+            SharedUtility.save_image(self.img_original, self.path_output_no_contour, self.jpg_quality)
 
     def find_contours(self):
         """Find contours in scanned image that meet size requirements."""
@@ -98,7 +98,7 @@ class Splitter:
 
         cv2.drawContours(image=pic_with_contours, contours=self._contours, contourIdx=-1, color=(0, 255, 0), thickness=contour_thickness, lineType=cv2.LINE_AA)
 
-        SharedUtility.save_image(pic_with_contours, Path(self.output_contour_debug_path), self.jpg_quality)
+        SharedUtility.save_image(pic_with_contours, Path(self.path_output_contour_debug), self.jpg_quality)
 
     def extract_and_save_found_image(self, contour):
         """From given contour, create a rectangle, extract that rectangle from the scanned image and save it."""
@@ -107,15 +107,15 @@ class Splitter:
 
         img_cropped = self.img_original[y : y + h, x : x + w]  # The found cropped image.
 
-        SharedUtility.save_image(img_cropped, Path(str(self.output_image_path).replace(".jpg", f"_cr_{self.found_images}.jpg")), self.jpg_quality)
+        SharedUtility.save_image(img_cropped, Path(str(self.path_output_image).replace(".jpg", f"_cr_{self.found_images}.jpg")), self.jpg_quality)
 
         self.found_images += 1
 
 
 def start_splitting(
     parent_path_images: str,
-    input_path: str,
-    output_path: str,
+    path_input: str,
+    path_output: str,
     min_pixel_ratio: int,
     detection_threshold: int,
     num_threads: int,
@@ -124,10 +124,10 @@ def start_splitting(
 
     print("\n[Status] Started Splitter.")
 
-    files = SharedUtility.generate_file_list(path=Path(parent_path_images) / Path(input_path))
+    files = SharedUtility.generate_file_list(path=Path(parent_path_images) / Path(path_input))
 
     if len(files) == 0:
-        raise ValueError(f"No image files found in {input_path}\n Exiting.")
+        raise ValueError(f"No image files found in {path_input}\n Exiting.")
 
     else:
         # Creating list of dictionaries for parallel processing.
@@ -137,8 +137,8 @@ def start_splitting(
             params.append(
                 {
                     "input_image_path": f,
-                    "input_path": input_path,
-                    "output_path": output_path,
+                    "path_input": path_input,
+                    "path_output": path_output,
                     "min_pixel_ratio": min_pixel_ratio,
                     "detection_threshold": detection_threshold,
                 }
@@ -166,17 +166,17 @@ if __name__ == "__main__":
 
     Environment.initiate(
         cfg.get("parent_path_images"),
-        cfg.get("untouched_scans_path"),
-        cfg.get("rough_cut_path"),
-        cfg.get("fine_cut_path"),
+        cfg.get("path_untouched_scans"),
+        cfg.get("path_rough_cut"),
+        cfg.get("path_fine_cut"),
     )
 
     cfg["num_threads"] = SharedUtility.get_available_threads()
 
     start_splitting(
         parent_path_images=cfg.get("parent_path_images"),
-        input_path=cfg.get("untouched_scans_path"),
-        output_path=cfg.get("rough_cut_path"),
+        path_input=cfg.get("path_untouched_scans"),
+        path_output=cfg.get("path_rough_cut"),
         min_pixels=cfg.get("min_pixels"),
         detection_threshold=cfg.get("detection_threshold"),
         num_threads=cfg.get("num_threads"),

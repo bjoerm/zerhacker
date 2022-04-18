@@ -20,17 +20,17 @@ def main():
 
     Environment.initiate(
         cfg.get("parent_path_images"),
-        cfg.get("untouched_scans_path"),
-        cfg.get("rough_cut_path"),
-        cfg.get("fine_cut_path"),
+        cfg.get("path_untouched_scans"),
+        cfg.get("path_rough_cut"),
+        cfg.get("path_fine_cut"),
     )
 
     cfg["num_threads"] = SharedUtility.get_available_threads()
 
     start_splitting(
         parent_path_images=cfg.get("parent_path_images"),
-        input_path=cfg.get("untouched_scans_path"),
-        output_path=cfg.get("rough_cut_path"),
+        path_input=cfg.get("path_untouched_scans"),
+        path_output=cfg.get("path_rough_cut"),
         min_pixel_ratio=cfg.get("min_pixel_ratio"),
         detection_threshold=cfg.get("detection_threshold"),
         num_threads=cfg.get("num_threads"),
@@ -38,8 +38,8 @@ def main():
 
     FineCut.main(
         parent_path_images=cfg.get("parent_path_images"),
-        input_path=cfg.get("rough_cut_path"),
-        output_path=cfg.get("fine_cut_path"),
+        input_path=cfg.get("path_rough_cut"),
+        output_path=cfg.get("path_fine_cut"),
         thresh=cfg.get("detection_threshold_finecut"),
         extra_crop=cfg.get("extra_crop"),
         num_threads=cfg.get("num_threads"),
