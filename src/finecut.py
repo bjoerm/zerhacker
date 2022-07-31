@@ -35,7 +35,8 @@ class FineCut:
         files = SharedUtility.generate_file_list(path=Path(parent_path_images) / Path(input_path))
 
         if len(files) == 0:
-            print(f"No image files found in {Path(parent_path_images) / Path(input_path)}\n Exiting.")  # TODO Add stop of the programm.
+            print(f"No image files found in {Path(parent_path_images) / Path(input_path)}\n Exiting.")
+            return
 
         else:
             # Creating list of dictionaries for parallel processing.
@@ -81,7 +82,7 @@ class FineCut:
 
         gray = cv2.cvtColor(src=img, code=cv2.COLOR_BGR2GRAY)
 
-        found, img = cls.cont(img=img, gray=gray, user_thresh=thresh, crop=crop)
+        found, img = cls.cont(img=img, gray=gray, user_thresh=thresh, crop=crop, output_path=output_path)
 
         output_image_path = ""
 
@@ -162,7 +163,7 @@ class FineCut:
         return warped
 
     @classmethod
-    def cont(cls, img, gray, user_thresh, crop):
+    def cont(cls, img, gray, user_thresh, crop, output_path):
         found = False
         loop = False
         old_val = 0  # thresh value from 2 iterations ago
@@ -213,15 +214,13 @@ class FineCut:
                         # if this happens a lot, increase the threshold, maybe it helps, otherwise just stop
                         user_thresh = user_thresh + 5
                         if user_thresh > 255:
-                            print("WARNING: This seems to be an edge case. If the result isn't satisfying try lowering the threshold using -t")
+                            print(f"\nWARNING: {output_path} seems to be an edge case. If the result isn't satisfying try lowering the threshold using -t")
                             break
-
-                        # print(f"Adjust Threshold: {user_thresh}")
 
                         if user_thresh == old_val - 5:
                             loop = True
             i += 1
             if i % 2 == 0:
-                old_val = user_thresh  # TODO What is this part for?
+                old_val = user_thresh
 
         return found, img

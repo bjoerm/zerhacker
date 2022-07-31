@@ -14,7 +14,7 @@ class SplitScannedAlbumPage:  # TODO Should this class be renamed into something
     def __init__(self, params: dict):
         self.path_input_image = Path(params.get("input_image_path"))
         self.path_output_image = Path(str(self.path_input_image).replace(params.get("path_input"), params.get("path_output")))
-        self.path_output_no_contour = Path(f"{str(Path(self.path_output_image.parent / self.path_output_image.stem))}__no_contour_detected{str(Path(self.path_output_image).suffix)}")
+        self.path_output_no_contour = Path(f"{str(Path(self.path_output_image.parent / self.path_output_image.stem))}__debug_no_contour_detected{str(Path(self.path_output_image).suffix)}")
         self.path_output_contour_debug = Path(f"{str(Path(self.path_output_image.parent / self.path_output_image.stem))}__debug_contours{str(Path(self.path_output_image).suffix)}")
 
         self.img_original = cv2.imdecode(np.fromfile(self.path_input_image, dtype=np.uint8), cv2.IMREAD_UNCHANGED)  # cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. From: https://stackoverflow.com/a/57872297
