@@ -8,7 +8,7 @@ import tqdm
 from shared_utils import SharedUtility
 
 
-class Splitter:
+class Splitter:  # TODO Should this class be renamed into something like scanned_album_page
     """This class detects and extracts individual images from a single big scanned image."""
 
     def __init__(self, params: dict):
@@ -21,7 +21,12 @@ class Splitter:
 
         self.img_original_height, self.img_original_width, _ = self.img_original.shape
 
-        self.min_pixels = int(min(self.img_original_height * params.get("min_pixel_ratio"), self.img_original_width * params.get("min_pixel_ratio")))  # Set minimum pixel threshold for filtering out any too small contours.
+        self.min_pixels = int(
+            min(
+                self.img_original_height * params.get("min_pixel_ratio"),
+                self.img_original_width * params.get("min_pixel_ratio"),
+            )
+        )  # Set minimum pixel threshold for filtering out any too small contours.
 
         self.detection_threshold = params.get("detection_threshold")
         self.jpg_quality = 95  # TODO Ideally use the same quality that the input file had, if this is saved in a jpg file when saving.
@@ -96,7 +101,9 @@ class Splitter:
 
         contour_thickness = int(max(self.img_original_height / 500, self.img_original_width / 500, 2))  # Dynamicly based on orig image size.
 
-        cv2.drawContours(image=pic_with_contours, contours=self._contours, contourIdx=-1, color=(0, 255, 0), thickness=contour_thickness, lineType=cv2.LINE_AA)
+        for cont in self._contours:
+            x, y, w, h = cv2.boundingRect(cont)
+            cv2.rectangle(pic_with_contours, (x, y), (x + w, y + h), (0, 255, 0), contour_thickness)
 
         SharedUtility.save_image(pic_with_contours, Path(self.path_output_contour_debug), self.jpg_quality)
 
@@ -107,7 +114,11 @@ class Splitter:
 
         img_cropped = self.img_original[y : y + h, x : x + w]  # The found cropped image.
 
-        SharedUtility.save_image(img_cropped, Path(str(self.path_output_image).replace(".jpg", f"_cr_{self.found_images}.jpg")), self.jpg_quality)
+        SharedUtility.save_image(
+            img_cropped,
+            Path(str(self.path_output_image).replace(".jpg", f"_cr_{self.found_images}.jpg")),
+            self.jpg_quality,
+        )
 
         self.found_images += 1
 

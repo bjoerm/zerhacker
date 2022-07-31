@@ -27,23 +27,19 @@ class FineCut:
         num_threads: int,
     ):
         """
-        Threshold value: Higher values represent less aggressive contour search. If it's chosen too high, a white border will be introduced.
+        :param thres: Threshold value. Higher values represent less aggressive contour search. If it's chosen too high, a white border will be introduced.
 
-        Extra crop: After crop/rotate often a small white border remains. This removes this. If it cuts off too much of your image, adjust this.
+        :param extra_crop: After crop/rotate often a small white border remains. This removes this. If it cuts off too much of your image, adjust this.
 
-        Number of threads to be used to process the images in parallel. If not provided, the script will try to find the value itself (which doesn't work on Windows or MacOS -> defaults to 1 thread only).
+        :param num_threads: Number of threads to be used to process the images in parallel. If not provided, the script will try to find the value itself (which doesn't work on Windows or MacOS -> defaults to 1 thread only).
         """
 
         print("\n[Status] Started FineCut.")
 
-        files = SharedUtility.generate_file_list(
-            path=Path(parent_path_images) / Path(input_path)
-        )
+        files = SharedUtility.generate_file_list(path=Path(parent_path_images) / Path(input_path))
 
         if len(files) == 0:
-            print(
-                f"No image files found in {Path(parent_path_images) / Path(input_path)}\n Exiting."
-            )  # TODO Add stop of the programm.
+            print(f"No image files found in {Path(parent_path_images) / Path(input_path)}\n Exiting.")  # TODO Add stop of the programm.
 
         else:
             # Creating list of dictionaries for parallel processing.
@@ -74,9 +70,7 @@ class FineCut:
         thresh = params["thresh"]
         crop = params["crop"]
 
-        img = cv2.imdecode(
-            np.fromfile(input_image_path, dtype=np.uint8), cv2.IMREAD_UNCHANGED
-        )  # cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. From: https://stackoverflow.com/a/57872297
+        img = cv2.imdecode(np.fromfile(input_image_path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)  # cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. From: https://stackoverflow.com/a/57872297
 
         # Add white background (in case one side is cropped right already, otherwise script would fail finding contours)
         img = cv2.copyMakeBorder(
@@ -102,9 +96,7 @@ class FineCut:
 
             # Saving image. imwrite does not work with German Umlaute and other special characters. Thus, the following solution.
             # Encode the im_resize into the im_buf_cropped, which is a one-dimensional ndarray (from https://jdhao.github.io/2019/09/11/opencv_unicode_image_path/#write-images-with-unicode-paths)
-            is_success, im_buf_cropped = cv2.imencode(
-                ".jpg", img, [int(cv2.IMWRITE_JPEG_QUALITY), 95]
-            )
+            is_success, im_buf_cropped = cv2.imencode(".jpg", img, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
 
             if is_success is True:
                 im_buf_cropped.tofile(output_image_path)
@@ -114,9 +106,7 @@ class FineCut:
 
         else:
             # If no contours were found, write input file to "failed" folder
-            output_image_path = str(input_image_path).replace(
-                input_path, output_path + "/failed/"
-            )
+            output_image_path = str(input_image_path).replace(input_path, output_path + "/failed/")
             Path(output_image_path).parent.mkdir(parents=True, exist_ok=True)
 
             copyfile(input_image_path, output_image_path)
@@ -183,20 +173,12 @@ class FineCut:
         i = 0  # number of iterations
 
         im_h, im_w = img.shape[:2]
-        while (
-            found is False
-        ):  # repeat to find the right threshold value for finding a rectangle
-            if (
-                user_thresh >= 255 or user_thresh == 0 or loop
-            ):  # maximum threshold value, minimum threshold value or loop detected (alternating between 2 threshold values without finding borders.
+        while found is False:  # repeat to find the right threshold value for finding a rectangle
+            if user_thresh >= 255 or user_thresh == 0 or loop:  # maximum threshold value, minimum threshold value or loop detected (alternating between 2 threshold values without finding borders.
                 break  # stop if no borders could be detected
 
-            thresh = cv2.threshold(
-                src=gray, thresh=user_thresh, maxval=255, type=cv2.THRESH_BINARY
-            )[1]
-            contours = cv2.findContours(
-                image=thresh, mode=cv2.RETR_LIST, method=cv2.CHAIN_APPROX_NONE
-            )[0]
+            thresh = cv2.threshold(src=gray, thresh=user_thresh, maxval=255, type=cv2.THRESH_BINARY)[1]
+            contours = cv2.findContours(image=thresh, mode=cv2.RETR_LIST, method=cv2.CHAIN_APPROX_NONE)[0]
             im_area = im_w * im_h
 
             for cnt in contours:
@@ -235,9 +217,7 @@ class FineCut:
                         # if this happens a lot, increase the threshold, maybe it helps, otherwise just stop
                         user_thresh = user_thresh + 5
                         if user_thresh > 255:
-                            print(
-                                "WARNING: This seems to be an edge case. If the result isn't satisfying try lowering the threshold using -t"
-                            )
+                            print("WARNING: This seems to be an edge case. If the result isn't satisfying try lowering the threshold using -t")
                             break
 
                         # print(f"Adjust Threshold: {user_thresh}")

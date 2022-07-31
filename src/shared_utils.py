@@ -1,7 +1,8 @@
 import os
 from pathlib import Path
-import numpy as np
+
 import cv2
+import numpy as np
 
 
 class SharedUtility:
