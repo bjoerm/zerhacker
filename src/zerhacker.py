@@ -3,7 +3,6 @@
 # TODO Add documentation to the methods in finecut.
 # TODO Low prio: Splitter and finecut don't use the same THRESHOLD system. One uses cv.THRESH_BINARY while the other uses THRESH_BINARY_INV. Change it so that both use the same metric. Splitter should be easier to change w.r.t. this.
 
-
 import toml
 
 from environment import Environment
@@ -15,12 +14,7 @@ from splitter import start_splitting
 def main():
     cfg = toml.load("options.toml", _dict=dict)
 
-    Environment.initiate(
-        cfg.get("parent_path_images"),
-        cfg.get("path_untouched_scans"),
-        cfg.get("path_rough_cut"),
-        cfg.get("path_fine_cut"),
-    )
+    Environment.initiate(parent_path_images=cfg.get("parent_path_images"), path_rough_cut=cfg.get("path_rough_cut"), path_fine_cut=cfg.get("path_fine_cut"))
 
     cfg["num_threads"] = SharedUtility.get_available_threads()
 
