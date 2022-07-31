@@ -8,14 +8,14 @@ import tqdm
 from shared_utils import SharedUtility
 
 
-class Splitter:  # TODO Should this class be renamed into something like scanned_album_page
+class SplitScannedAlbumPage:  # TODO Should this class be renamed into something like scanned_album_page
     """This class detects and extracts individual images from a single big scanned image."""
 
     def __init__(self, params: dict):
         self.path_input_image = Path(params.get("input_image_path"))
         self.path_output_image = Path(str(self.path_input_image).replace(params.get("path_input"), params.get("path_output")))
-        self.path_output_no_contour = Path(self.path_output_image).parent / Path("no_contour_detected") / Path(self.path_input_image).name
-        self.path_output_contour_debug = Path(self.path_output_image).parent / Path("contour_debug") / Path(self.path_input_image).name
+        self.path_output_no_contour = Path(f"{str(Path(self.path_output_image.parent / self.path_output_image.stem))}__no_contour_detected{str(Path(self.path_output_image).suffix)}")
+        self.path_output_contour_debug = Path(f"{str(Path(self.path_output_image.parent / self.path_output_image.stem))}__debug_contours{str(Path(self.path_output_image).suffix)}")
 
         self.img_original = cv2.imdecode(np.fromfile(self.path_input_image, dtype=np.uint8), cv2.IMREAD_UNCHANGED)  # cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. From: https://stackoverflow.com/a/57872297
 
@@ -95,15 +95,15 @@ class Splitter:  # TODO Should this class be renamed into something like scanned
             return None
 
     def save_found_contours(self):
-        """Saves found contours as overlay to the image (in a separate output folder). This can be used for checks of the set thresholds and parameters."""
+        """Saves found contours as overlay to the image. This can be used for checks of the set thresholds and parameters."""
 
         pic_with_contours = self.img_original.copy()
 
-        contour_thickness = int(max(self.img_original_height / 500, self.img_original_width / 500, 2))  # Dynamicly based on orig image size.
+        contour_thickness = int(max(self.img_original_height / 500, self.img_original_width / 500, 3))  # Dynamicly based on orig image size.
 
         for cont in self._contours:
             x, y, w, h = cv2.boundingRect(cont)
-            cv2.rectangle(pic_with_contours, (x, y), (x + w, y + h), (0, 255, 0), contour_thickness)
+            cv2.rectangle(img=pic_with_contours, pt1=(x, y), pt2=(x + w, y + h), color=(0, 0, 255), thickness=contour_thickness)
 
         SharedUtility.save_image(pic_with_contours, Path(self.path_output_contour_debug), self.jpg_quality)
 
@@ -163,7 +163,7 @@ def start_splitting(
 
 def _call_splitter(params: dict):
     """Function to be called by multiple threads in parallel. See also https://stackoverflow.com/a/21345308 for another parallel package."""
-    test = Splitter(params)
+    test = SplitScannedAlbumPage(params)
     test.split_scanned_image()
 
 
@@ -175,12 +175,7 @@ if __name__ == "__main__":
     # Load options
     cfg = toml.load("options.toml", _dict=dict)
 
-    Environment.initiate(
-        cfg.get("parent_path_images"),
-        cfg.get("path_untouched_scans"),
-        cfg.get("path_rough_cut"),
-        cfg.get("path_fine_cut"),
-    )
+    Environment.initiate(parent_path_images=cfg.get("parent_path_images"), path_rough_cut=cfg.get("path_rough_cut"), path_fine_cut=cfg.get("path_fine_cut"))
 
     cfg["num_threads"] = SharedUtility.get_available_threads()
 

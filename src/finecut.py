@@ -1,7 +1,3 @@
-# Original source: https://github.com/z80z80z80/autocrop
-
-# TODO Add filename of the detected edge cases to the print.
-
 from multiprocessing import Pool
 from pathlib import Path
 from shutil import copyfile
@@ -14,7 +10,7 @@ from shared_utils import SharedUtility
 
 
 class FineCut:
-    """Crop/Rotate images automatically. Images should be single images on white background."""
+    """Crop and marginally rotate images automatically. Images should be single images on ideally white background."""
 
     @classmethod
     def main(
