@@ -82,7 +82,7 @@ class FineCut:
 
         gray = cv2.cvtColor(src=img, code=cv2.COLOR_BGR2GRAY)
 
-        found, img = cls.cont(img=img, gray=gray, user_thresh=thresh, crop=crop, output_path=output_path)
+        found, img = cls.cont(img=img, gray=gray, user_thresh=thresh, crop=crop, input_image_path=input_image_path)
 
         output_image_path = ""
 
@@ -163,7 +163,7 @@ class FineCut:
         return warped
 
     @classmethod
-    def cont(cls, img, gray, user_thresh, crop, output_path):
+    def cont(cls, img, gray, user_thresh, crop, input_image_path):
         found = False
         loop = False
         old_val = 0  # thresh value from 2 iterations ago
@@ -214,7 +214,7 @@ class FineCut:
                         # if this happens a lot, increase the threshold, maybe it helps, otherwise just stop
                         user_thresh = user_thresh + 5
                         if user_thresh > 255:
-                            print(f"\nWARNING: {output_path} seems to be an edge case. If the result isn't satisfying try lowering the threshold using -t")
+                            print(f"\nWARNING: {input_image_path} seems to be an edge case. If the result isn't satisfying try lowering the threshold using -t")
                             break
 
                         if user_thresh == old_val - 5:
