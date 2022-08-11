@@ -48,14 +48,16 @@ class SplitScannedAlbumPage:  # TODO Should this class be renamed into something
     def find_contours(self):
         """Find contours in scanned image that meet size requirements."""
         self._prepare_image_for_contour_search()
+
         self._contours = cv2.findContours(image=self._thresh, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)
         self._contours = self._contours[0] if len(self._contours) == 2 else self._contours[1]
-        self._contours.reverse()  # Reversing the list so the found contours start at the top left and not at the bottom.
 
         # Filter out too small contours
         self._contours = [self._filter_out_too_small_contours(c) for c in self._contours]
         self._contours = [self._filter_out_contours_with_odd_width_height_ratios(c) for c in self._contours]
         self._contours = [i for i in self._contours if i is not None]
+
+        self._contours.reverse()  # Reversing the list so the found contours start at the top left and not at the bottom.
 
     def _prepare_image_for_contour_search(self):
         """Transform the image so that contours can be found best."""
