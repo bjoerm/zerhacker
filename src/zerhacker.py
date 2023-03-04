@@ -12,7 +12,7 @@ from splitter import start_splitting
 
 
 def main():
-    cfg = toml.load("options.toml", _dict=dict)
+    cfg = toml.load("config.toml", _dict=dict)
 
     Environment.initiate(parent_path_images=cfg.get("parent_path_images"), path_rough_cut=cfg.get("path_rough_cut"), path_fine_cut=cfg.get("path_fine_cut"))
 
