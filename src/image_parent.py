@@ -1,5 +1,7 @@
-from ast import Tuple
 from pathlib import Path
+
+import cv2
+import numpy as np
 
 
 class ImageParent:
@@ -13,7 +15,7 @@ class ImageParent:
 
     @staticmethod
     def generate_output_paths(path_input: Path, folder_input: Path, folder_output: Path) -> tuple[Path, str]:
-        """Generating the parts needed for constructing the output path. This returns the stem and the extension so that possible suffixes can be added to the output stem."""
+        """Generating the parts needed for constructing the output path. This returns the stem and the extension so that possible suffixes to the stem can be added later."""
 
         path_output = Path(str(path_input).replace(str(folder_input), str(folder_output)))
         path_output_stem = path_output.parent / path_output.stem
@@ -21,13 +23,13 @@ class ImageParent:
 
         return path_output_stem, path_output_file_extension
 
-    def read_image(self):
-        # TODO
-        pass
+    def read_image(self) -> np.ndarray:
+        image = cv2.imdecode(np.fromfile(self.path_input, dtype=np.uint8), cv2.IMREAD_UNCHANGED)  # cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. Thus this workaround from: https://stackoverflow.com/a/57872297
+        return image
 
 
 if __name__ == "__main__":
 
-    ImageParent(path_input=Path("test_input_folder/a/abc.txt"), folder_input=Path("test_input_folder/"), folder_output=Path("test_output_folder/"))
+    ImageParent(path_input=Path("pictures/1_untouched_input/01 - Torben/doc10074220210228113627_001.jpg"), folder_input=Path("pictures/1_untouched_input/"), folder_output=Path("pictures/2_rough_cut/"))
 
     print("End of script reached.")
