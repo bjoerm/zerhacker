@@ -4,11 +4,9 @@
 # Dev: pip-compile --upgrade --extra dev --resolver=backtracking -o dev_requirements.txt pyproject.toml
 # pip-sync requirements.txt dev_requirements.txt
 
-
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
-
 
 [project]
 name = "zerhacker"
@@ -17,7 +15,6 @@ dependencies = ["opencv-python", "pydantic", "tqdm"]
 
 [project.optional-dependencies]
 dev = ["black", "flake8", "isort", "pytest"]
-
 
 [tool.black]
 line-length = 200
@@ -29,3 +26,4 @@ line_length = 200
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+# Does not work in Github Actions. addopts = "-n 4"      # Parallel testing with pytest-xdist (https://code.visualstudio.com/docs/python/
