@@ -5,7 +5,7 @@ from pydantic import BaseModel, DirectoryPath, FilePath
 
 class Paths(BaseModel):
     path_untouched_scans: Path
-    path_rough_cut: Path
+    path_splitter: Path
     path_fine_cut: Path
 
 

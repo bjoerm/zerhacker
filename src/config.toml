@@ -1,7 +1,7 @@
 [paths]
-path_untouched_scans = "input/"
-path_splitter = "output/1_splitter/"
-path_fine_cut = "output/2_fine_cut/"
+path_untouched_scans = "input"
+path_splitter = "output/1_splitter"
+path_fine_cut = "output/2_fine_cut"
 
 
 [splitter]
