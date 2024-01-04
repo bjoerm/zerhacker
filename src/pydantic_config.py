@@ -14,7 +14,7 @@ class Splitter(BaseModel):
     detection_threshold: int
 
 
-class Finecut(BaseModel):
+class FineCut(BaseModel):
     detection_threshold_finecut: int
     extra_crop: int
 
@@ -22,4 +22,4 @@ class Finecut(BaseModel):
 class Config(BaseModel):
     paths: Paths
     splitter: Splitter
-    finecut: Finecut
+    fine_cut: FineCut

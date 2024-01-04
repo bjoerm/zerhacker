@@ -1,6 +1,7 @@
 import shutil
 import tomllib
 
+from initiator import Initiator
 from pydantic_config import Config
 
 with open("src/config.toml", "rb") as f:
@@ -8,10 +9,9 @@ with open("src/config.toml", "rb") as f:
 
 config = Config(**config)
 
-for i in [config.paths.path_rough_cut, config.paths.path_fine_cut]:
-    shutil.rmtree(i, ignore_errors=True)
+files_for_splitter = Initiator(input_folder=config.paths.path_untouched_scans, output_folder=config.paths.path_rough_cut).init()
 
-for key, pth in config.paths:
-    pth.mkdir(parents=True, exist_ok=True)
 
-file_list = [str(f.parent / f.name) for f in config.paths.path_untouched_scans.rglob("*.jpg")]  # rglob is recursive.
+# TODO Do splitter work here.
+
+files_for_fine_cut = Initiator(input_folder=config.paths.path_rough_cut, output_folder=config.paths.path_fine_cut).init()
