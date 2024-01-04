@@ -24,12 +24,15 @@ class ImageParent:
         return path_output_stem, path_output_file_extension
 
     def read_image(self) -> np.ndarray:
-        image = cv2.imdecode(np.fromfile(self.path_input, dtype=np.uint8), cv2.IMREAD_UNCHANGED)  # cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. Thus this workaround from: https://stackoverflow.com/a/57872297
+        image = cv2.imdecode(
+            np.fromfile(self.path_input, dtype=np.uint8), cv2.IMREAD_UNCHANGED
+        )  # cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. Thus this workaround from: https://stackoverflow.com/a/57872297
         return image
 
 
 if __name__ == "__main__":
-
-    ImageParent(path_input=Path("pictures/1_untouched_input/01 - Torben/doc10074220210228113627_001.jpg"), folder_input=Path("pictures/1_untouched_input/"), folder_output=Path("pictures/2_rough_cut/"))
+    ImageParent(
+        path_input=Path("pictures/1_untouched_input/01 - Torben/doc10074220210228113627_001.jpg"), folder_input=Path("pictures/1_untouched_input/"), folder_output=Path("pictures/2_rough_cut/")
+    )
 
     print("End of script reached.")
