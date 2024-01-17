@@ -1,4 +1,3 @@
- 
 import tomllib
 
 from initiator import Initiator
@@ -7,7 +6,7 @@ from pydantic_config import Config
 with open("src/config.toml", "rb") as f:
     config = tomllib.load(f)
 
-config = Config(**config)
+config = Config.model_validate(config)
 
 files_for_splitter = Initiator(input_folder=config.paths.path_untouched_scans, output_folder=config.paths.path_splitter).init()
 
