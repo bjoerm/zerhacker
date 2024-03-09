@@ -11,9 +11,10 @@ config = Config.model_validate(config)
 
 files_for_splitter = Initiator(input_folder=config.paths.path_untouched_scans, output_folder=config.paths.path_splitter).init()
 
-ScannedAlbumPage(img_path_input=files_for_splitter[0], folder_input=config.paths.path_untouched_scans, folder_output=config.paths.path_splitter)
+for file in files_for_splitter:
+    ScannedAlbumPage(
+        img_path_input=file, folder_input=config.paths.path_untouched_scans, folder_output=config.paths.path_splitter, min_pixel_ratio=config.splitter.min_pixel_ratio, debug_mode=True
+    ).split_scanned_image()
 
 
-# TODO Do splitter work here.
-
-files_for_fine_cut = Initiator(input_folder=config.paths.path_splitter, output_folder=config.paths.path_fine_cut).init()
+# files_for_fine_cut = Initiator(input_folder=config.paths.path_splitter, output_folder=config.paths.path_fine_cut, debug_mode=True).init()

@@ -7,12 +7,16 @@ import numpy as np
 class ImageParent:
     """Parent class that contains basic operations needed for images in this case."""
 
-    def __init__(self, img_path_input: Path, folder_input: Path, folder_output: Path):
-        self.img_path_input = img_path_input
-        self.file_extension = img_path_input.suffix  # TODO Setting this fix to ".png"?
+    def __init__(self, image_path_input: Path, folder_input: Path, folder_output: Path, debug_mode: bool = False):
+        self.img_path_input = image_path_input
+        self.file_extension = ".png"  # Alternative: image_path_input.suffix. But if that were jpeg, there would be a quality loss due to the multiple read and write steps.
         self.path_output_stem = self.generate_output_paths(path_input=self.img_path_input, folder_input=folder_input, folder_output=folder_output)
 
-        self.image_untouched = self.load_image()
+        self.image = self.load_image()
+
+        self.image_height, self.image_width, _ = self.image.shape
+
+        self.debug_mode = debug_mode
 
     @staticmethod
     def generate_output_paths(path_input: Path, folder_input: Path, folder_output: Path) -> Path:
@@ -43,8 +47,21 @@ class ImageParent:
         else:
             raise ValueError(f"Error when writing file {str(output_path)}.")
 
+    def prepare_image_for_contour_search(self):
+        """Transform the image into a black and white image so that contours can be found best. For types of thresholds, see: https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html"""
+
+        image_gray = cv2.cvtColor(src=self.image, code=cv2.COLOR_BGR2GRAY)
+        image_blurred = cv2.GaussianBlur(src=image_gray, ksize=(5, 5), sigmaX=0)  # Gaussian filtering to remove noise.
+
+        self.threshold = cv2.threshold(
+            src=image_blurred,
+            thresh=0,  # Set to 0 as the threshold shall be individually be found by Otsu's Binarization.
+            maxval=255,
+            type=cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU,  #
+        )[1]
+
 
 if __name__ == "__main__":
-    ImageParent(img_path_input=Path("input/01 - T/doc10074220210228113627_001.jpg"), folder_input=Path("input/"), folder_output=Path("output/1_splitter/"))
+    ImageParent(image_path_input=Path("input/01 - T/doc10074220210228113627_001.jpg"), folder_input=Path("input/"), folder_output=Path("output/1_splitter/"))
 
     print("End of script reached.")
