@@ -1,13 +1,11 @@
-import tomllib
+# TODO Fix detection of rotated pictures as well as images with sky.
+
 
 from initiator import Initiator
-from pydantic_config import Config
-from scanned_album_page import ScannedAlbumPage
+from pydantic_config import load_config
+from splitter.scanned_album_page import ScannedAlbumPage
 
-with open("src/config.toml", "rb") as f:
-    config = tomllib.load(f)
-
-config = Config.model_validate(config)
+config = load_config()
 
 files_for_splitter = Initiator(input_folder=config.paths.path_untouched_scans, output_folder=config.paths.path_splitter).init()
 

@@ -7,7 +7,7 @@ import numpy as np
 class ImageParent:
     """Parent class that contains basic operations needed for images in this case."""
 
-    def __init__(self, image_path_input: Path, folder_input: Path, folder_output: Path, debug_mode: bool = False):
+    def __init__(self, image_path_input: Path, folder_input: Path, folder_output: Path, debug_mode: bool = False, write_mode: bool = True):
         self.img_path_input = image_path_input
         self.file_extension = ".png"  # Alternative: image_path_input.suffix. But if that were jpeg, there would be a quality loss due to the multiple read and write steps.
         self.path_output_stem = self.generate_output_paths(path_input=self.img_path_input, folder_input=folder_input, folder_output=folder_output)
@@ -17,6 +17,7 @@ class ImageParent:
         self.image_height, self.image_width, _ = self.image.shape
 
         self.debug_mode = debug_mode
+        self.write_mode = write_mode  # Deactivated in unit tests.
 
     @staticmethod
     def generate_output_paths(path_input: Path, folder_input: Path, folder_output: Path) -> Path:
@@ -30,6 +31,7 @@ class ImageParent:
     def load_image(self) -> np.ndarray:
         """cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. Thus this workaround from: https://stackoverflow.com/a/57872297"""
         image = cv2.imdecode(np.fromfile(self.img_path_input, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+
         return image
 
     def save_image(self, image: np.ndarray, output_path: Path):
@@ -47,7 +49,7 @@ class ImageParent:
         else:
             raise ValueError(f"Error when writing file {str(output_path)}.")
 
-    def prepare_image_for_contour_search(self):
+    def prepare_image_for_contour_search(self) -> np.ndarray:
         """Transform the image into a black and white image so that contours can be found best. For types of thresholds, see: https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html"""
 
         image_gray = cv2.cvtColor(src=self.image, code=cv2.COLOR_BGR2GRAY)
@@ -59,6 +61,8 @@ class ImageParent:
             maxval=255,
             type=cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU,  #
         )[1]
+
+        return self.threshold
 
 
 if __name__ == "__main__":

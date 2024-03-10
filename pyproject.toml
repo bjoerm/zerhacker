@@ -26,4 +26,9 @@ line_length = 200
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
-# Does not work in Github Actions. addopts = "-n 4"      # Parallel testing with pytest-xdist (https://code.visualstudio.com/docs/python/
+addopts = [
+    "--import-mode=importlib",  # "For new projects, we recommend to use importlib import mode (see https://docs.pytest.org/en/7.1.x/explanation/goodpractices.html#which-import-mode for a detailed explanation)."
+    # "-n 4"  # Does not work in Github Actions. Parallel testing with pytest-xdist (https://code.visualstudio.com/docs/python/
+]
+
+
