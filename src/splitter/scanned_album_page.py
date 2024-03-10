@@ -4,7 +4,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from image_parent import ImageParent
+from shared.image_parent import ImageParent
 
 
 class ScannedAlbumPage(ImageParent):

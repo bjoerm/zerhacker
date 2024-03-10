@@ -1,8 +1,8 @@
 # TODO Fix detection of rotated pictures as well as images with sky.
 
 
-from initiator import Initiator
-from pydantic_config import load_config
+from shared.initiator import Initiator
+from shared.pydantic_config import load_config
 from splitter.scanned_album_page import ScannedAlbumPage
 
 config = load_config()

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from pydantic_config import load_config
+from shared.pydantic_config import load_config
 from splitter.scanned_album_page import ScannedAlbumPage
 
 
