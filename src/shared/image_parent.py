@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 import cv2
 import numpy as np
@@ -14,10 +15,12 @@ class ImageParent:
 
         self.image = self.load_image()
 
-        self.image_height, self.image_width, _ = self.image.shape
+        self.image_height: int
+        self.image_width: int
+        self.get_image_height_and_weight()
 
         self.debug_mode = debug_mode
-        self.write_mode = write_mode  # Deactivated in unit tests.
+        self.write_mode = write_mode
 
     @staticmethod
     def generate_output_paths(path_input: Path, folder_input: Path, folder_output: Path) -> Path:
@@ -49,17 +52,32 @@ class ImageParent:
         else:
             raise ValueError(f"Error when writing file {str(output_path)}.")
 
-    def prepare_image_for_contour_search(self) -> np.ndarray:
-        """Transform the image into a black and white image so that contours can be found best. For types of thresholds, see: https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html"""
+    def get_image_height_and_weight(self) -> tuple[int, int]:
+        """Set/update the classes information about image height and width."""
+        self.image_height, self.image_width, _ = self.image.shape
+
+        return (self.image_height, self.image_width)
+
+    def prepare_image_for_contour_search(self, manual_threshold: int = -1) -> np.ndarray:
+        """Transform the image into a grayscale image and then into a binary (black and white) image so that contours can be found best.
+
+        For types of thresholds, see: https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html"""
 
         image_gray = cv2.cvtColor(src=self.image, code=cv2.COLOR_BGR2GRAY)
         image_blurred = cv2.GaussianBlur(src=image_gray, ksize=(5, 5), sigmaX=0)  # Gaussian filtering to remove noise.
 
+        if manual_threshold >= 0:
+            threshold_type = cv2.THRESH_BINARY_INV
+            threshold_value = manual_threshold
+        else:  # Automatic threshold estimation.
+            threshold_type = cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU  # THRESH_OTSU will automatically find pretty good thresholds.
+            threshold_value = 0  # Set to 0 as the threshold shall be individually be found by Otsu's Binarization.
+
         self.threshold = cv2.threshold(
             src=image_blurred,
-            thresh=0,  # Set to 0 as the threshold shall be individually be found by Otsu's Binarization.
+            thresh=threshold_value,
             maxval=255,
-            type=cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU,  #
+            type=threshold_type,
         )[1]
 
         return self.threshold

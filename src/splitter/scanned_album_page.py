@@ -1,5 +1,5 @@
-from operator import contains
 from pathlib import Path
+from typing import Optional
 
 import cv2
 import numpy as np
@@ -10,10 +10,12 @@ from shared.image_parent import ImageParent
 class ScannedAlbumPage(ImageParent):
     """This class detects and extracts individual images from a single big scanned image."""
 
-    def __init__(self, img_path_input: Path, folder_input: Path, folder_output: Path, min_pixel_ratio: float, debug_mode: bool = False, write_mode: bool = True):
+    def __init__(self, img_path_input: Path, folder_input: Path, folder_output: Path, manual_threshold: int, min_pixel_ratio: float, debug_mode: bool = False, write_mode: bool = True):
         super().__init__(
             image_path_input=img_path_input, folder_input=folder_input, folder_output=folder_output, debug_mode=debug_mode, write_mode=write_mode
         )  # Executing the __init__ of the parent class.
+
+        self.manual_threshold = manual_threshold
 
         self.min_pixels = int(min(self.image_height * min_pixel_ratio, self.image_width * min_pixel_ratio))  # Set minimum pixel threshold for filtering out any too small contours.
 
@@ -23,7 +25,7 @@ class ScannedAlbumPage(ImageParent):
     def split_scanned_image(self):
         """This is the main method of this class."""
 
-        self.prepare_image_for_contour_search()
+        self.prepare_image_for_contour_search(manual_threshold=self.manual_threshold)
         self.find_contours()
 
         if self.debug_mode is True & self.write_mode is True:
@@ -75,10 +77,10 @@ class ScannedAlbumPage(ImageParent):
         if contour is None:
             return None
 
-        _, _, w, h = cv2.boundingRect(contour)
+        _, _, width, height = cv2.boundingRect(contour)
 
         if (
-            w / h <= 3 or h / w <= 3
+            width / height <= 3 or height / width <= 3
         ):  # The lower the ratio the more likely false positives. The higher the ratio, the less contours will be filtered by this. # TODO Think about putting this into the config.toml.
             return contour
         else:

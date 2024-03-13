@@ -12,11 +12,11 @@ class Paths(BaseModel):
 
 class Splitter(BaseModel):
     min_pixel_ratio: float
-    detection_threshold: int
+    manual_detection_threshold: int
 
 
 class FineCut(BaseModel):
-    detection_threshold_finecut: int
+    manual_detection_threshold: int
     extra_crop: int
 
 

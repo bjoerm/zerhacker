@@ -54,7 +54,13 @@ def test_remove_temp_output_folder(path_folder_temp_output):
 def test_found_contours(config, path_folder_temp_output, path_folder_input, write_mode, input_path, expected_output):
 
     album_page = ScannedAlbumPage(
-        img_path_input=Path(input_path), folder_input=path_folder_input, folder_output=path_folder_temp_output, min_pixel_ratio=config.splitter.min_pixel_ratio, debug_mode=True, write_mode=write_mode
+        img_path_input=Path(input_path),
+        folder_input=path_folder_input,
+        folder_output=path_folder_temp_output,
+        manual_threshold=config.splitter.manual_detection_threshold,
+        min_pixel_ratio=config.splitter.min_pixel_ratio,
+        debug_mode=True,
+        write_mode=write_mode,
     )
 
     album_page.split_scanned_image()
