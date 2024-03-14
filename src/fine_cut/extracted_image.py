@@ -8,19 +8,19 @@ from shared.image_parent import ImageParent
 class ExtractedImage(ImageParent):
     """Automatically rotate a single image and crop the border to remove possible remains from the scanning."""
 
-    def __init__(self, img_path_input: Path, folder_input: Path, folder_output: Path, extra_crop: int, debug_mode: bool = False, write_mode: bool = True):
-        super().__init__(
-            image_path_input=img_path_input, folder_input=folder_input, folder_output=folder_output, debug_mode=debug_mode, write_mode=write_mode
-        )  # Executing the __init__ of the parent class.
-
-        self.extra_crop = extra_crop
-
-    def rotate_and_crop(self):
+    def rotate_and_crop(self, extra_crop: int):
         self.add_white_border()
         self.find_quadrilateral()
         self.expand_quadrilateral_to_rectangle()
-        self.crop_border()
+        self.crop_border(extra_crop=extra_crop)
         self.rotate_image()
+
+        if self.debug_mode is True & self.write_mode is True:
+            self.save_found_contours(image=self.image, output_path_suffix="contours")
+            self.save_found_contours(image=self.threshold, output_path_suffix="contours_threshold")
+
+        if self.write_mode is True:
+            self.save_image(image=self.image, output_path=self.path_output_stem.parent / (self.path_output_stem.name + "_" + str(self.found_images) + self.file_extension))
 
     def add_white_border(self):
         """Add white pixels around the image. This will help for the image rotation part."""
@@ -48,8 +48,7 @@ class ExtractedImage(ImageParent):
         # TODO Alternative: self.prepare_image_for_contour_search()
 
         self.prepare_image_for_contour_search(manual_threshold=-1)
-
-        # TODO find_contours from ScannedAlbumPage into ImageGenerator and use it here? Same for _filter_out_too_small_contours,_filter_out_contours_with_odd_width_height_ratios and save_found_contours which should also be valueable here?
+        self.find_contours()
 
     def expand_quadrilateral_to_rectangle(self):
         pass
@@ -57,5 +56,5 @@ class ExtractedImage(ImageParent):
     def rotate_image(self):
         pass
 
-    def crop_border(self):
+    def crop_border(self, extra_crop: int):
         pass

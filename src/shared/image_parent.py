@@ -8,7 +8,7 @@ import numpy as np
 class ImageParent:
     """Parent class that contains basic operations needed for images in this case."""
 
-    def __init__(self, image_path_input: Path, folder_input: Path, folder_output: Path, debug_mode: bool = False, write_mode: bool = True):
+    def __init__(self, image_path_input: Path, folder_input: Path, folder_output: Path, manual_threshold: int, min_pixel_ratio: float, debug_mode: bool = False, write_mode: bool = True):
         self.img_path_input = image_path_input
         self.file_extension = ".png"  # Alternative: image_path_input.suffix. But if that were jpeg, there would be a quality loss due to the multiple read and write steps.
         self.path_output_stem = self.generate_output_paths(path_input=self.img_path_input, folder_input=folder_input, folder_output=folder_output)
@@ -18,6 +18,13 @@ class ImageParent:
         self.image_height: int
         self.image_width: int
         self.get_image_height_and_weight()
+
+        self.manual_threshold = manual_threshold
+
+        self.min_pixels = int(min(self.image_height * min_pixel_ratio, self.image_width * min_pixel_ratio))  # Set minimum pixel threshold for filtering out any too small contours.
+
+        self.found_contours: tuple = ()
+        self.found_images = 0  # Number will be incremented with each detected images.
 
         self.debug_mode = debug_mode
         self.write_mode = write_mode
@@ -81,6 +88,69 @@ class ImageParent:
         )[1]
 
         return self.threshold
+
+    def find_contours(self):
+        """Find contours in scanned image that meet size requirements.
+
+        'RETR_EXTERNAL: If you use this flag, it returns only extreme outer flags. All child contours are left behind.'
+        More info regarding contour modes, see https://docs.opencv.org/master/d9/d8b/tutorial_py_contours_hierarchy.html
+        """
+
+        self.found_contours = cv2.findContours(image=self.threshold, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)
+        self.found_contours = self.found_contours[0] if len(self.found_contours) == 2 else self.found_contours[1]  # TODO Document why the else part is needed, and in which cases it would trigger.
+
+        # Keep only desired contours.
+        self.found_contours = [self._filter_out_too_small_contours(cont) for cont in self.found_contours]
+        self.found_contours = [self._filter_out_contours_with_odd_width_height_ratios(cont) for cont in self.found_contours]
+        self.found_contours = [cont for cont in self.found_contours if cont is not None]
+
+        self.found_contours.reverse()  # Reversing the list so the found contours start at the top left and not at the bottom.  # TODO That's not 100% working as intended.
+
+        return self.found_contours
+
+    def _filter_out_too_small_contours(self, contour):
+        """Remove contours that are smaller than the set pixel threshold."""
+        if contour is None:
+            return None
+
+        _, _, width, height = cv2.boundingRect(contour)
+
+        if width >= self.min_pixels and height >= self.min_pixels:
+            return contour
+        else:
+            return None
+
+    def _filter_out_contours_with_odd_width_height_ratios(self, contour):
+        """A scanned picture should have a certain ratio between height and width. Omit contours without those."""
+        if contour is None:
+            return None
+
+        _, _, width, height = cv2.boundingRect(contour)
+
+        if (
+            width / height <= 3 or height / width <= 3
+        ):  # The lower the ratio the more likely false positives. The higher the ratio, the less contours will be filtered by this. # TODO Think about putting this into the config.toml.
+            return contour
+        else:
+            return None
+
+    def save_found_contours(self, image: np.ndarray, output_path_suffix: str) -> np.ndarray:
+        """Saves found contours as overlay to the image. This can be used for checks of the set threshold and parameters."""
+
+        image = image.copy()
+
+        contour_thickness = int(max(self.image_height / 500, self.image_width / 500, 3))  # Dynamicly based on orig image size.
+
+        if "threshold" in output_path_suffix:
+            image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)  # Threshold images are grayscale by default and need to be converted to display colored border.
+
+        for cont in self.found_contours:
+            x, y, w, h = cv2.boundingRect(cont)
+            cv2.rectangle(img=image, pt1=(x, y), pt2=(x + w, y + h), color=(0, 0, 255), thickness=contour_thickness)
+
+        self.save_image(image=image, output_path=self.path_output_stem.parent / (self.path_output_stem.name + "__" + output_path_suffix + self.file_extension))
+
+        return image
 
 
 if __name__ == "__main__":
