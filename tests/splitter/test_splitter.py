@@ -15,12 +15,12 @@ def write_mode():
 
 @pytest.fixture
 def path_folder_input():
-    return Path("input")
+    return Path("tests/splitter/input")
 
 
 @pytest.fixture
 def path_folder_temp_output():
-    return Path("temp_output")
+    return Path("tests/splitter/temp_output")
 
 
 @pytest.fixture
@@ -30,7 +30,7 @@ def config():
 
 def test_remove_temp_output_folder(path_folder_temp_output):
     """Tidying up before launching new tests."""
-    shutil.rmtree(Path("tests/splitter/") / path_folder_temp_output, ignore_errors=True)
+    shutil.rmtree(path_folder_temp_output, ignore_errors=True)
 
 
 @pytest.mark.parametrize(
@@ -51,10 +51,10 @@ def test_remove_temp_output_folder(path_folder_temp_output):
         ["tests/splitter/input/4b.jpg", 4],
     ],
 )
-def test_found_contours(config, path_folder_temp_output, path_folder_input, write_mode, input_path, expected_output):
+def test_found_contours(config, path_folder_input, path_folder_temp_output, write_mode, input_path, expected_output):
 
     album_page = ScannedAlbumPage(
-        img_path_input=Path(input_path),
+        image_path_input=Path(input_path),
         folder_input=path_folder_input,
         folder_output=path_folder_temp_output,
         manual_threshold=config.splitter.manual_detection_threshold,
