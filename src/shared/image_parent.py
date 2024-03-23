@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 import cv2
 import numpy as np
@@ -8,7 +7,7 @@ import numpy as np
 class ImageParent:
     """Parent class that contains basic operations needed for images in this case."""
 
-    def __init__(self, image_path_input: Path, folder_input: Path, folder_output: Path, manual_threshold: int, min_pixel_ratio: float, debug_mode: bool = False, write_mode: bool = True):
+    def __init__(self, image_path_input: Path, folder_input: Path, folder_output: Path, manual_detection_threshold: int, min_pixel_ratio: float, debug_mode: bool = False, write_mode: bool = True):
         self.img_path_input = image_path_input
         self.file_extension = ".png"  # Alternative: image_path_input.suffix. But if that were jpeg, there would be a quality loss due to the multiple read and write steps.
         self.path_output_stem = self.generate_output_paths(path_input=self.img_path_input, folder_input=folder_input, folder_output=folder_output)
@@ -19,7 +18,7 @@ class ImageParent:
         self.image_width: int
         self.get_image_height_and_weight()
 
-        self.manual_threshold = manual_threshold
+        self.manual_detection_threshold = manual_detection_threshold
 
         self.min_pixels = int(min(self.image_height * min_pixel_ratio, self.image_width * min_pixel_ratio))  # Set minimum pixel threshold for filtering out any too small contours.
 
@@ -65,7 +64,7 @@ class ImageParent:
 
         return (self.image_height, self.image_width)
 
-    def prepare_image_for_contour_search(self, manual_threshold: int = -1) -> np.ndarray:
+    def prepare_image_for_contour_search(self, manual_detection_threshold: int = -1) -> np.ndarray:
         """Transform the image into a grayscale image and then into a binary (black and white) image so that contours can be found best.
 
         For types of thresholds, see: https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html"""
@@ -73,9 +72,9 @@ class ImageParent:
         image_gray = cv2.cvtColor(src=self.image, code=cv2.COLOR_BGR2GRAY)
         image_blurred = cv2.GaussianBlur(src=image_gray, ksize=(5, 5), sigmaX=0)  # Gaussian filtering to remove noise.
 
-        if manual_threshold >= 0:
+        if manual_detection_threshold >= 0:
             threshold_type = cv2.THRESH_BINARY_INV
-            threshold_value = manual_threshold
+            threshold_value = manual_detection_threshold
         else:  # Automatic threshold estimation.
             threshold_type = cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU  # THRESH_OTSU will automatically find pretty good thresholds.
             threshold_value = 0  # Set to 0 as the threshold shall be individually be found by Otsu's Binarization.

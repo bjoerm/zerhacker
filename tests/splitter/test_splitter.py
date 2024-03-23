@@ -57,7 +57,7 @@ def test_found_contours(config, path_folder_input, path_folder_temp_output, writ
         image_path_input=Path(input_path),
         folder_input=path_folder_input,
         folder_output=path_folder_temp_output,
-        manual_threshold=config.splitter.manual_detection_threshold,
+        manual_detection_threshold=config.splitter.manual_detection_threshold,
         min_pixel_ratio=config.splitter.min_pixel_ratio,
         debug_mode=True,
         write_mode=write_mode,

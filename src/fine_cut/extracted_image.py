@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import cv2
 
 from shared.image_parent import ImageParent
@@ -47,7 +45,7 @@ class ExtractedImage(ImageParent):
 
         # TODO Alternative: self.prepare_image_for_contour_search()
 
-        self.prepare_image_for_contour_search(manual_threshold=-1)
+        self.prepare_image_for_contour_search(manual_detection_threshold=self.manual_detection_threshold)
         self.find_contours()
 
     def expand_quadrilateral_to_rectangle(self):

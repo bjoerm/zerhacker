@@ -42,7 +42,7 @@ def test_integration_fine_cut(config, path_folder_input, path_folder_temp_output
             image_path_input=file,
             folder_input=path_folder_input,
             folder_output=path_folder_temp_output,
-            manual_threshold=config.fine_cut.manual_detection_threshold,
+            manual_detection_threshold=config.fine_cut.manual_detection_threshold,
             min_pixel_ratio=config.fine_cut.min_pixel_ratio,
             debug_mode=True,
             write_mode=write_mode,
