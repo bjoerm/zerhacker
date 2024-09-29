@@ -66,4 +66,4 @@ class SharedUtility:
         if is_success is True:
             im_buf_cropped.tofile(str(output_path))
         else:
-            raise ValueError("Errer when writing file.")
+            raise ValueError("Error when writing file.")

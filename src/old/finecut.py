@@ -5,7 +5,6 @@ from shutil import copyfile
 import cv2
 import numpy as np
 import tqdm
-
 from shared_utils import SharedUtility
 
 
@@ -67,7 +66,9 @@ class FineCut:
         thresh = params["thresh"]
         crop = params["crop"]
 
-        img = cv2.imdecode(np.fromfile(input_image_path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)  # cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. From: https://stackoverflow.com/a/57872297
+        img = cv2.imdecode(
+            np.fromfile(input_image_path, dtype=np.uint8), cv2.IMREAD_UNCHANGED
+        )  # cv2.imread does as of 2021-04 not work for German Umlaute and similar characters. From: https://stackoverflow.com/a/57872297
 
         # Add white background (in case one side is cropped right already, otherwise script would fail finding contours)
         img = cv2.copyMakeBorder(
@@ -135,6 +136,8 @@ class FineCut:
         rect = cls.order_rect(points)
         (tl, tr, br, bl) = rect
 
+        # Note to self: This ensures a rectangle:
+
         # compute the width of the new image, which will be the maximum distance between bottom-right and bottom-left x-coordiates or the top-right and top-left x-coordinates
         widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
         widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
@@ -154,6 +157,8 @@ class FineCut:
             ],
             dtype=np.float32,
         )
+
+        # Note to self: End of this ensures a rectangle. In the following this is just applied.
 
         # compute the perspective transform matrix and then apply it
         M = cv2.getPerspectiveTransform(rect, dst)
@@ -180,27 +185,30 @@ class FineCut:
 
             for cnt in contours:
                 area = cv2.contourArea(contour=cnt)
-                if area > (im_area / 100) and area < (im_area / 1.01):
-                    epsilon = 0.1 * cv2.arcLength(curve=cnt, closed=True)
-                    approx = cv2.approxPolyDP(curve=cnt, epsilon=epsilon, closed=True)
+                if area > (im_area / 100) and area < (im_area / 1.01):  # Says: If the found contourArea's size (in pixel sum) is at least between 1% to 99% of original area of the image, then do:
+                    epsilon = 0.1 * cv2.arcLength(
+                        curve=cnt, closed=True
+                    )  # cv2.arcLength = Contour Perimeter (https://docs.opencv.org/4.x/d3/dc0/group__imgproc__shape.html#ga8d26483c636be6b35c3ec6335798a47c)
+                    approx = cv2.approxPolyDP(
+                        curve=cnt, epsilon=epsilon, closed=True
+                    )  # This is a contour approximation (https://docs.opencv.org/4.x/dd/d49/tutorial_py_contour_features.html). So linking individual contours.
 
-                    # TODO Understand the following part!
-                    if len(approx) == 4:
+                    if len(approx) == 4:  # If the contour approximation returns four items, it has found for corners.
                         found = True
-                    elif len(approx) > 4:
+                    elif len(approx) > 4:  # If the contour approximation found more than four items, it was too sensible and the sensibility gets reduced step wise.
                         user_thresh = user_thresh - 1
                         # print(f"Adjust Threshold: {user_thresh}")  # Commented this out to not get spammed when processing many files.
-                        if user_thresh == old_val + 1:
+                        if user_thresh == old_val + 1:  # Seems to be related if the loop gets stuck.
                             loop = True
                         break
-                    elif len(approx) < 4:
+                    elif len(approx) < 4:  # If the contour approximation didn't find four corners yet, change the threshold.
                         user_thresh = user_thresh + 5
                         # print(f"Adjust Threshold: {user_thresh}")  # Commented this out to not get spammed when processing many files.
-                        if user_thresh == old_val - 5:
+                        if user_thresh == old_val - 5:  # Seems to be related if the loop gets stuck.
                             loop = True
                         break
 
-                    rect = np.zeros((4, 2), dtype=np.float32)
+                    rect = np.zeros((4, 2), dtype=np.float32)  # Important: This is not (yet) a rectangle! It can be any quadrilateral form.
                     rect[0] = approx[0]
                     rect[1] = approx[1]
                     rect[2] = approx[2]
