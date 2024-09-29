@@ -1,5 +1,6 @@
-# TODO Fix detection of rotated pictures as well as images with sky.
-
+# TODO Fix detection of rotated pictures as well as images with sky. For rotated images use: https://stackoverflow.com/a/62598739
+# TODO Rotate doesn't yet rotate anything.
+# TODO Check and re-enable _filter_out_too_small_contours() and _filter_out_contours_with_odd_width_height_ratios()
 
 from fine_cut.extracted_image import ExtractedImage
 from shared.initiator import Initiator

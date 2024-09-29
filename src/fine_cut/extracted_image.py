@@ -14,8 +14,8 @@ class ExtractedImage(ImageParent):
         self.rotate_image()
 
         if self.debug_mode is True & self.write_mode is True:
-            self.save_found_contours(image=self.image, output_path_suffix="contours")
-            self.save_found_contours(image=self.threshold, output_path_suffix="contours_threshold")
+            self.save_found_contours(image=self.image, output_path_suffix="DEBUG2_contours")
+            self.save_found_contours(image=self.threshold, output_path_suffix="DEBUG2_contours_threshold")
 
         if self.write_mode is True:
             self.save_image(image=self.image, output_path=self.path_output_stem.parent / (self.path_output_stem.name + "_" + str(self.found_images) + self.file_extension))

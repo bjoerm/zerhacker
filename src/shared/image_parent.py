@@ -70,7 +70,7 @@ class ImageParent:
         For types of thresholds, see: https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html"""
 
         image_gray = cv2.cvtColor(src=self.image, code=cv2.COLOR_BGR2GRAY)
-        image_blurred = cv2.GaussianBlur(src=image_gray, ksize=(5, 5), sigmaX=0)  # Gaussian filtering to remove noise.
+        image_gray = cv2.GaussianBlur(src=image_gray, ksize=(5, 5), sigmaX=0)  # Gaussian filtering to remove noise.
 
         if manual_detection_threshold >= 0:
             threshold_type = cv2.THRESH_BINARY_INV
@@ -80,7 +80,7 @@ class ImageParent:
             threshold_value = 0  # Set to 0 as the threshold shall be individually be found by Otsu's Binarization.
 
         self.threshold = cv2.threshold(
-            src=image_blurred,
+            src=image_gray,
             thresh=threshold_value,
             maxval=255,
             type=threshold_type,

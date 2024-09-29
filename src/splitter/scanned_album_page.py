@@ -16,8 +16,8 @@ class ScannedAlbumPage(ImageParent):
         self.find_contours()
 
         if self.debug_mode is True & self.write_mode is True:
-            self.save_found_contours(image=self.image, output_path_suffix="contours")
-            self.save_found_contours(image=self.threshold, output_path_suffix="contours_threshold")
+            self.save_found_contours(image=self.image, output_path_suffix="DEBUG1_contours")
+            self.save_found_contours(image=self.threshold, output_path_suffix="DEBUG1_contours_threshold")
 
         for contour in self.found_contours:
             self.extract_and_save_found_image(contour)
