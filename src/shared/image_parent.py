@@ -8,6 +8,7 @@ class ImageParent:
     """Parent class that contains basic operations needed for images in this case."""
 
     def __init__(self, image_path_input: Path, folder_input: Path, folder_output: Path, manual_detection_threshold: int, min_pixel_ratio: float, debug_mode: bool = False, write_mode: bool = True):
+
         self.img_path_input = image_path_input
         self.file_extension = ".png"  # Alternative: image_path_input.suffix. But if that were jpeg, there would be a quality loss due to the multiple read and write steps.
         self.path_output_stem = self.generate_output_paths(path_input=self.img_path_input, folder_input=folder_input, folder_output=folder_output)

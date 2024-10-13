@@ -1,11 +1,13 @@
-# TODO Fix detection of rotated pictures as well as images with sky. For rotated images use: https://stackoverflow.com/a/62598739
-# TODO Rotate doesn't yet rotate anything.
+# TODO Fix detection of rotated pictures as well as images with sky. For rotated images use: https://stackoverflow.com/a/62598739  Rotate doesn't yet rotate anything.
 # TODO Check and re-enable _filter_out_too_small_contours() and _filter_out_contours_with_odd_width_height_ratios()
 
 from fine_cut.extracted_image import ExtractedImage
 from shared.initiator import Initiator
+from shared.logger import logger
 from shared.pydantic_config import load_config
 from splitter.scanned_album_page import ScannedAlbumPage
+
+logger.info("Zerhacker started")
 
 config = load_config()
 
@@ -35,3 +37,6 @@ for file in files_for_fine_cut:
         debug_mode=True,
         write_mode=True,
     ).rotate_and_crop(extra_crop=config.fine_cut.extra_crop)
+
+
+logger.info("Zerhacker finished")

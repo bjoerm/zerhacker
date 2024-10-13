@@ -1,12 +1,17 @@
 import cv2
 
 from shared.image_parent import ImageParent
+from shared.logger import logger
 
 
 class ExtractedImage(ImageParent):
     """Automatically rotate a single image and crop the border to remove possible remains from the scanning."""
 
     def rotate_and_crop(self, extra_crop: int):
+        """This is the main method of this class."""
+
+        logger.debug(f"Start rotate_and_crop class: {self.img_path_input}")
+
         self.add_white_border()
         self.find_quadrilateral()
         self.expand_quadrilateral_to_rectangle()

@@ -4,6 +4,8 @@ from pathlib import Path
 from pydantic import DirectoryPath
 from pydantic.dataclasses import dataclass
 
+from shared.logger import logger
+
 
 @dataclass
 class Initiator:
@@ -12,6 +14,8 @@ class Initiator:
 
     def init(self) -> list[Path]:
         """Prepare the output folder and return all relevant files from the input folder."""
+
+        logger.debug("Start initiator class.")
 
         shutil.rmtree(self.output_folder, ignore_errors=True)
         self.output_folder.mkdir(parents=True, exist_ok=True)
@@ -22,5 +26,7 @@ class Initiator:
 
         if len(file_list) == 0:
             raise ValueError("No relevant files detected in input folder.")
+
+        logger.debug("End initiator class.")
 
         return file_list
