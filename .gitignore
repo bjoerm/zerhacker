@@ -133,7 +133,8 @@ dmypy.json
 # Own ignore
 venv/
 .venv/
-.vscode/
+.vscode/*
+!.vscode/launch.json
 __pycache__/
 *.code-workspace
 *.pyc
