@@ -1,3 +1,4 @@
+# TODO Add multi-threading.
 # TODO Check and re-enable _filter_out_too_small_contours() and _filter_out_contours_with_odd_width_height_ratios()
 # TODO Should cv2.Canny be used? https://docs.opencv.org/4.x/da/d22/tutorial_py_canny.html
 # TODO Add min_pixel_ratio in extracted_image class as base check.
