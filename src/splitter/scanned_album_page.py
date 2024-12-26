@@ -13,9 +13,9 @@ class ScannedAlbumPage(ImageParent):
     def split_scanned_image(self):
         """This is the main method of this class."""
 
-        logger.debug(f"Start split_scanned_image class: {self.img_path_input}")
+        logger.info(f"Start split_scanned_image class: {self.img_path_input}")
 
-        self.prepare_image_for_contour_search(manual_detection_threshold=self.manual_detection_threshold)
+        self.transform_into_black_white(manual_detection_threshold=self.manual_detection_threshold)
         self.find_contours()
 
         if self.debug_mode is True & self.write_mode is True:

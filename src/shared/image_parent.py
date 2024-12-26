@@ -3,6 +3,8 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from shared.logger import logger
+
 
 class ImageParent:
     """Parent class that contains basic operations needed for images in this case."""
@@ -17,7 +19,7 @@ class ImageParent:
 
         self.image_height: int
         self.image_width: int
-        self.get_image_height_and_weight()
+        self.update_image_height_and_weight()
 
         self.manual_detection_threshold = manual_detection_threshold
 
@@ -59,26 +61,26 @@ class ImageParent:
         else:
             raise ValueError(f"Error when writing file {str(output_path)}.")
 
-    def get_image_height_and_weight(self) -> tuple[int, int]:
+    def update_image_height_and_weight(self) -> tuple[int, int]:
         """Set/update the classes information about image height and width."""
         self.image_height, self.image_width, _ = self.image.shape
 
         return (self.image_height, self.image_width)
 
-    def prepare_image_for_contour_search(self, manual_detection_threshold: int = -1) -> np.ndarray:
+    def transform_into_black_white(self, manual_detection_threshold: int = -1) -> np.ndarray:
         """Transform the image into a grayscale image and then into a binary (black and white) image so that contours can be found best.
 
         For types of thresholds, see: https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html"""
 
         image_gray = cv2.cvtColor(src=self.image, code=cv2.COLOR_BGR2GRAY)
-        image_gray = cv2.GaussianBlur(src=image_gray, ksize=(5, 5), sigmaX=0)  # Gaussian filtering to remove noise.
+        image_gray = cv2.GaussianBlur(src=image_gray, ksize=(5, 5), sigmaX=0)  # Gaussian filtering to remove noise.  # TODO Maybe have this as input as it might not be needed for the rotation part.
 
         if manual_detection_threshold >= 0:
             threshold_type = cv2.THRESH_BINARY_INV
             threshold_value = manual_detection_threshold
         else:  # Automatic threshold estimation.
             threshold_type = cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU  # THRESH_OTSU will automatically find pretty good thresholds.
-            threshold_value = 0  # Set to 0 as the threshold shall be individually be found by Otsu's Binarization.
+            threshold_value = 0  # Set to 0 as the threshold shall be individually be found by Otsu's Binarization in the following step.
 
         self.threshold = cv2.threshold(
             src=image_gray,
@@ -90,7 +92,7 @@ class ImageParent:
         return self.threshold
 
     def find_contours(self):
-        """Find contours in scanned image that meet size requirements.
+        """Find (rectangle) contours in scanned image that meet size requirements.
 
         'RETR_EXTERNAL: If you use this flag, it returns only extreme outer flags. All child contours are left behind.'
         More info regarding contour modes, see https://docs.opencv.org/master/d9/d8b/tutorial_py_contours_hierarchy.html
@@ -141,8 +143,9 @@ class ImageParent:
 
         contour_thickness = int(max(self.image_height / 500, self.image_width / 500, 3))  # Dynamicly based on orig image size.
 
+        # Threshold images are grayscale by default and need to be converted to display colored border.
         if "threshold" in output_path_suffix:
-            image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)  # Threshold images are grayscale by default and need to be converted to display colored border.
+            image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
         for cont in self.found_contours:
             x, y, w, h = cv2.boundingRect(cont)
