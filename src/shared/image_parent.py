@@ -99,12 +99,23 @@ class ImageParent:
         """
 
         self.found_contours = cv2.findContours(image=self.threshold, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)
+
         self.found_contours = self.found_contours[0] if len(self.found_contours) == 2 else self.found_contours[1]  # TODO Document why the else part is needed, and in which cases it would trigger.
+
+        if len(self.found_contours) >= 1:
+            pass
+        else:
+            raise ValueError(f"No contour was found in the image: str({self.img_path_input})")
 
         # Keep only desired contours.
         self.found_contours = [self._filter_out_too_small_contours(cont) for cont in self.found_contours]
         self.found_contours = [self._filter_out_contours_with_odd_width_height_ratios(cont) for cont in self.found_contours]
         self.found_contours = [cont for cont in self.found_contours if cont is not None]
+
+        if len(self.found_contours) >= 1:
+            pass
+        else:
+            raise ValueError(f"No contour was found in the image: str({self.img_path_input})")
 
         self.found_contours.reverse()  # Reversing the list so the found contours start at the top left and not at the bottom.  # TODO That's not 100% working as intended.
 

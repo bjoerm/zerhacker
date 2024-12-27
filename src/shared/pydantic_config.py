@@ -1,7 +1,13 @@
 import tomllib
 from pathlib import Path
+from typing import Optional
 
 from pydantic import BaseModel
+
+
+class General(BaseModel):
+    debug_mode: bool
+    write_mode: bool
 
 
 class Paths(BaseModel):
@@ -21,10 +27,16 @@ class FineCut(BaseModel):
     extra_crop: int
 
 
+class Parallel(BaseModel):
+    num_threads: Optional[int]
+
+
 class Config(BaseModel):
+    general: General
     paths: Paths
     splitter: Splitter
     fine_cut: FineCut
+    parallel: Parallel
 
 
 def config_path() -> Path:
