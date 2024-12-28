@@ -85,12 +85,12 @@ def _parallel_class_init(args: Args):
 def parallel_executor(num_threads: Optional[int], args: list[Args]):
     """Function to call the function in parallel."""
 
-    logger.debug(f"{args[0].task} parallelization started")
+    logger.info(f"{args[0].task} parallelization started")
 
     with Pool(num_threads) as p:
         list(tqdm.tqdm(p.imap(_parallel_class_init, args), total=len(args)))
 
-    logger.debug(f"{args[0].task} parallelization finished")
+    logger.info(f"{args[0].task} parallelization finished")
 
 
 if __name__ == "__main__":

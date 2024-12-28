@@ -52,7 +52,7 @@ class ImageParent:
         Encode the im_resize into the im_buf_cropped, which is a one-dimensional ndarray (from https://jdhao.github.io/2019/09/11/opencv_unicode_image_path/#write-images-with-unicode-paths)
         """
 
-        self.path_output_stem.parent.mkdir(parents=True, exist_ok=True)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
 
         is_success, im_buf_cropped = cv2.imencode(self.file_extension, image)
 
@@ -102,11 +102,6 @@ class ImageParent:
 
         self.found_contours = self.found_contours[0] if len(self.found_contours) == 2 else self.found_contours[1]  # TODO Document why the else part is needed, and in which cases it would trigger.
 
-        if len(self.found_contours) >= 1:
-            pass
-        else:
-            raise ValueError(f"No contour was found in the image: str({self.img_path_input})")
-
         # Keep only desired contours.
         self.found_contours = [self._filter_out_too_small_contours(cont) for cont in self.found_contours]
         self.found_contours = [self._filter_out_contours_with_odd_width_height_ratios(cont) for cont in self.found_contours]
@@ -114,8 +109,18 @@ class ImageParent:
 
         if len(self.found_contours) >= 1:
             pass
-        else:
-            raise ValueError(f"No contour was found in the image: str({self.img_path_input})")
+        elif self.write_mode is True:
+            # When no contours or only too small contours are detected, copy the image to a special folder in the output folder.
+            if "no_contour_detected" in str(self.path_output_stem):
+                new_path = self.path_output_stem.parent / (
+                    self.path_output_stem.name + "_" + str(self.found_images) + self.file_extension
+                )  # If it is already present, don't add it a second time. This can happen, if this parent class is called in the fine cut part.
+            else:
+                new_path = self.path_output_stem.parent / Path("no_contour_detected") / (self.path_output_stem.name + "_" + str(self.found_images) + self.file_extension)
+
+            self.save_image(image=self.image, output_path=new_path)
+        elif self.write_mode is False:
+            raise ValueError(f"No contours found in: {self.img_path_input}")
 
         self.found_contours.reverse()  # Reversing the list so the found contours start at the top left and not at the bottom.  # TODO That's not 100% working as intended.
 

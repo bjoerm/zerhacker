@@ -14,15 +14,23 @@ class ExtractedImage(ImageParent):
     def rotate_and_crop(self, extra_crop: int):
         """This is the main method of this class."""
 
-        logger.info(f"Start rotate_and_crop class: {self.img_path_input}")
+        logger.debug(f"Start rotate_and_crop class: {self.img_path_input}")
 
         self.add_white_border()
-        self.fine_rotate_image()
-        self.crop_border(extra_crop=extra_crop)
+
+        self.transform_into_black_white(manual_detection_threshold=self.manual_detection_threshold)
+        self.find_contours()
+
+        if len(self.found_contours) != 1:
+            logger.info(f"No single contour found in: {self.img_path_input}")
+            return
 
         if self.debug_mode is True & self.write_mode is True:
             self.save_found_contours(image=self.image, output_path_suffix="DEBUG2_contours")
             self.save_found_contours(image=self.threshold, output_path_suffix="DEBUG2_contours_threshold")
+
+        self.fine_rotate_image()
+        self.crop_border(extra_crop=extra_crop)
 
         if self.write_mode is True:
             self.save_image(image=self.image, output_path=self.path_output_stem.parent / (self.path_output_stem.name + "_" + str(self.found_images) + self.file_extension))
@@ -49,9 +57,6 @@ class ExtractedImage(ImageParent):
 
         image = self.image.copy()
 
-        self.transform_into_black_white(manual_detection_threshold=self.manual_detection_threshold)
-        self.find_contours()
-
         largest_contour = max(self.found_contours, key=cv2.contourArea)
         rect = cv2.minAreaRect(largest_contour)
         logger.debug(f"Detected degree for rotation: {rect[2]}")  # TODO This currently rotates oddly. Fix this!
@@ -65,8 +70,8 @@ class ExtractedImage(ImageParent):
         src_pts = box.astype("float32")
         dst_pts = np.array([[0, height - 1], [0, 0], [width - 1, 0], [width - 1, height - 1]], dtype="float32")
 
-        M = cv2.getPerspectiveTransform(src_pts, dst_pts)
-        warped = cv2.warpPerspective(image, M, (width, height))
+        matrix = cv2.getPerspectiveTransform(src_pts, dst_pts)
+        warped = cv2.warpPerspective(image, matrix, (width, height))
 
         # Rather dirty hack to prevent the rotation from minAreaRect to go overboard.
         if rect[2] > 45:  # This is the degree (should range from 0 to 90), when the image is rotated "back".

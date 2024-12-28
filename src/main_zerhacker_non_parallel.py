@@ -1,3 +1,5 @@
+# This is helpful for debugging.
+
 from fine_cut.extracted_image import ExtractedImage
 from shared.initiator import Initiator
 from shared.logger import logger

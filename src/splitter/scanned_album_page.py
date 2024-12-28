@@ -13,7 +13,7 @@ class ScannedAlbumPage(ImageParent):
     def split_scanned_image(self):
         """This is the main method of this class."""
 
-        logger.info(f"Start split_scanned_image class: {self.img_path_input}")
+        logger.debug(f"Start split_scanned_image class: {self.img_path_input}")
 
         self.transform_into_black_white(manual_detection_threshold=self.manual_detection_threshold)
         self.find_contours()
@@ -24,12 +24,6 @@ class ScannedAlbumPage(ImageParent):
 
         for contour in self.found_contours:
             self.extract_and_save_found_image(contour)
-
-        # When no contours are found or only too small contours are detected, copy the image to a special folder in the output folder.
-        if self.found_images == 0 & self.write_mode is True:
-            self.save_image(
-                image=self.image, output_path=self.path_output_stem.parent / Path("no_contour_detected") / (self.path_output_stem.name + "_" + str(self.found_images) + self.file_extension)
-            )
 
     def extract_and_save_found_image(self, contour) -> np.ndarray:
         """From a single given contour, create a rectangle, extract that rectangle from the scanned image and save it."""
