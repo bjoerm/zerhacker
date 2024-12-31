@@ -1,3 +1,4 @@
+# Config: Set manual_detection_threshold for both split and fine cut?
 # TODO Should cv2.Canny be used? https://docs.opencv.org/4.x/da/d22/tutorial_py_canny.html
 
 from multiprocessing import Pool
