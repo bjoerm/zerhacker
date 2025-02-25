@@ -33,7 +33,7 @@ class ExtractedImage(ImageParent):
         self.crop_border(extra_crop=extra_crop)
 
         if self.write_mode is True:
-            self.save_image(image=self.image, output_path=self.path_output_stem.parent / (self.path_output_stem.name + "_" + str(self.found_images) + self.file_extension))
+            self.save_image(image=self.image, output_path=self.path_output_stem.parent / (self.path_output_stem.name + self.file_extension))
 
     def add_white_border(self):
         """Add white pixels around the image. This will help for the image rotation part."""
