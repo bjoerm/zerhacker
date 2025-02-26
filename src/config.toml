@@ -1,6 +1,6 @@
 [general]
-debug_mode = true
-write_mode = true
+debug_mode = false
+write_mode = true  # Should always here be true, mainly exists to allow unit tests without writing files.
 
 [paths]
 path_untouched_scans = "input"
@@ -14,7 +14,7 @@ min_pixel_ratio = 0.10  # Minimum ratio of height/width of the scanned image tha
 [fine_cut]
 manual_detection_threshold = 190 # Default: -1, which enables automatic search for best value. Can be set between 0 and 255 for manual threshold. This would then refer to THRESH_BINARY_INV. Depending on the type of the scanned material it might make sense to set this value manually. If set to manual, values from 180 to 210 performed best on tested data.
 min_pixel_ratio = 0.90  # Minimum ratio of height/width of the scanned image that any contour must reach. Else the contour will be omitted. Use higher values if the ratio of the picture to the scanned album page is high and lower values otherwise.
-extra_crop = 10  # After crop/rotate often a small white border remains. This pixel width shall be cropped from the rotated image. If it cuts off too much of your images, adjust this.
+extra_crop = 15  # After crop/rotate often a small white border remains. This pixel width shall be cropped from the rotated image. If it cuts off too much or not enough of your images, adjust this.
 
 [parallel]
 num_threads = 1 # Just a placeholder. This will be overwritten with the number of possible thread of your system.
